@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import NewJobModal from "@/components/jobs/NewJobModal";
 import InvoicePreviewSection from "@/components/jobs/InvoicePreviewSection";
@@ -9,47 +9,42 @@ import PhotoPreviewModal from "@/components/jobs/PhotoPreviewModal";
 import PhotosSection from "@/components/jobs/PhotosSection";
 import JobSummarySection from "@/components/jobs/JobSummarySection";
 
-// Temporary demo data for V1 until jobs come from a database or API.
-const jobs = [
-  {
-    id: 1,
-    title: "Kitchen Sink Repair",
-    client: "Sarah Johnson",
-    address: "123 Main St, San Diego, CA",
-    phone: "(619) 555-1234",
-    status: "Scheduled",
-    date: "Today • 10:00 AM",
-  },
-  {
-    id: 2,
-    title: "Weekly Lawn Maintenance",
-    client: "Mike Rodriguez",
-    address: "456 Oak Ave, Chula Vista, CA",
-    phone: "(619) 555-5678",
-    status: "In Progress",
-    date: "Today • 1:30 PM",
-  },
-  {
-    id: 3,
-    title: "Garage Cleanout",
-    client: "Tom Chen",
-    address: "789 Pine Rd, Oceanside, CA",
-    phone: "(619) 555-9999",
-    status: "Completed",
-    date: "Yesterday • 4:00 PM",
-  },
-];
+// Page-level job shape used for the backend job detail.
 
-// Page-level job shape used for the current mock job lookup.
 type Job = {
-  id: number;
+  id: string;
   title: string;
   client: string;
   address: string;
-  phone: string;
+  phone?: string;
   status: string;
   date: string;
 };
+
+type RelatedInvoice = {
+  id: string;
+  documentNumber: string;
+  type: string;
+  status: string;
+  total: number;
+  balanceDue: number;
+  createdAt: string;
+};
+
+type JobPhoto = {
+  id: string;
+  name: string;
+  url: string;
+  category: "Before" | "During" | "After";
+};
+
+function normalizePhotoCategory(
+  category?: string
+): "Before" | "During" | "After" {
+  if (category === "during") return "During";
+  if (category === "after") return "After";
+  return "Before";
+}
 
 export default function JobDetailsPage() {
   // Route params and page-level UI state.
@@ -57,14 +52,8 @@ export default function JobDetailsPage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
 
   // Photo workflow state.
-  const [photos, setPhotos] = useState<
-    {
-      id: number;
-      name: string;
-      url: string;
-      category: "Before" | "During" | "After";
-    }[]
-  >([]);
+  const [photos, setPhotos] = useState<JobPhoto[]>([]);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(
     null
   );
@@ -76,7 +65,7 @@ export default function JobDetailsPage() {
       description: string;
       quantity: string;
       amount: string;
-      photoIds: number[];
+      photoIds: string[];
     }[]
   >([{ description: "", quantity: "", amount: "", photoIds: [] }]);
   const total = lineItems.reduce((total, item) => {
@@ -101,27 +90,133 @@ export default function JobDetailsPage() {
   const dueDateText = dueDate || "Not specified";
 
   // Photo management handlers.
-  function handlePhotoUpload(e: ChangeEvent<HTMLInputElement>) {
+  async function handlePhotoUpload(e: ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-    const newPhotos = Array.from(files).map((file, index) => ({
-      id: Date.now() + index,
-      name: file.name,
-      url: URL.createObjectURL(file),
-      category: "Before" as const,
-    }));
-    setPhotos((prev) => [...prev, ...newPhotos]);
+
+    try {
+      setIsUploadingPhoto(true);
+      const token = localStorage.getItem("token");
+      const uploadedPhotos: JobPhoto[] = [];
+
+      for (const file of Array.from(files)) {
+        const formData = new FormData();
+        formData.append("photo", file);
+        formData.append("category", "before");
+
+        const res = await fetch(
+          `http://localhost:5050/api/jobs/${jobId}/photos`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: formData,
+          }
+        );
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "Failed to upload photo");
+        }
+
+        uploadedPhotos.push({
+          id: data.id,
+          name: data.fileName || file.name,
+          url: data.photoUrl,
+          category: normalizePhotoCategory(data.category),
+        });
+      }
+
+      setPhotos((prev) => [...uploadedPhotos, ...prev]);
+      e.target.value = "";
+    } catch (error) {
+      console.error("Upload photo error:", error);
+      window.alert("Photo upload failed. Please try again.");
+    } finally {
+      setIsUploadingPhoto(false);
+    }
   }
 
-  function handlePhotoCategoryChange(
-    photoId: number,
+  async function handlePhotoCategoryChange(
+    photoId: string,
     category: "Before" | "During" | "After"
   ) {
+    const previousPhotos = photos;
+
     setPhotos((prev) =>
       prev.map((photo) =>
         photo.id === photoId ? { ...photo, category } : photo
       )
     );
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(
+        `http://localhost:5050/api/jobs/${jobId}/photos/${photoId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            category: category.toLowerCase(),
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to update photo category");
+      }
+    } catch (error) {
+      console.error("Update photo category error:", error);
+      setPhotos(previousPhotos);
+      window.alert("Photo category update failed. Please try again.");
+    }
+  }
+
+  async function handlePhotoDelete(photoId: string) {
+    const confirmed = window.confirm(
+      "Delete this photo? This will remove it from the job and storage."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(
+        `http://localhost:5050/api/jobs/${jobId}/photos/${photoId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to delete photo");
+      }
+
+      setPhotos((prev) => prev.filter((photo) => photo.id !== photoId));
+      setLineItems((prev) =>
+        prev.map((item) => ({
+          ...item,
+          photoIds: item.photoIds.filter((id) => id !== photoId),
+        }))
+      );
+    } catch (error) {
+      console.error("Delete photo error:", error);
+      window.alert("Photo delete failed. Please try again.");
+    }
   }
 
   // Photo preview modal handlers.
@@ -142,7 +237,7 @@ export default function JobDetailsPage() {
   }
 
   // Line item photo-selection handlers.
-  function togglePhotoForLineItem(photoId: number) {
+  function togglePhotoForLineItem(photoId: string) {
     if (selectedLineItemIndex === null) return;
 
     setLineItems((prev) =>
@@ -346,12 +441,9 @@ export default function JobDetailsPage() {
     exportWindow.document.close();
     exportWindow.focus();
 
-    const triggerPrint = () => {
+    exportWindow.onload = () => {
       exportWindow.print();
     };
-
-    exportWindow.onload = triggerPrint;
-    setTimeout(triggerPrint, 500);
   }
 
   async function handleShareDocument() {
@@ -377,17 +469,115 @@ export default function JobDetailsPage() {
     }
   }
 
-  // Current job lookup derived from the route.
-  const jobId = Number(params.id);
-  const initialJob = useMemo(
-    () => jobs.find((j) => j.id === jobId) || null,
-    [jobId]
-  );
-  const [job, setJob] = useState<Job | null>(initialJob);
+  // Current job loaded from the backend using the route id.
+  const jobId = params.id;
+  const [job, setJob] = useState<Job | null>(null);
+  const [relatedInvoices, setRelatedInvoices] = useState<RelatedInvoice[]>([]);
+  const invoiceSectionRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    setJob(initialJob);
-  }, [initialJob]);
+    const fetchJob = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await fetch(`http://localhost:5050/api/jobs/${jobId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          setJob({
+            id: data.job.id,
+            title: data.job.title,
+            client: data.job.customerName,
+            address: data.job.serviceAddress,
+            phone: data.job.customerPhone ?? "",
+            status: data.job.status,
+            date: new Date(data.job.scheduledAt).toLocaleString(),
+          });
+        }
+      } catch (error) {
+        console.error("Fetch job detail error:", error);
+      }
+    };
+
+    fetchJob();
+  }, [jobId]);
+
+  useEffect(() => {
+    const fetchJobPhotos = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await fetch(
+          `http://localhost:5050/api/jobs/${jobId}/photos`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "Failed to fetch photos");
+        }
+
+        setPhotos(
+          data.map((photo: any) => ({
+            id: photo.id,
+            name: photo.fileName || "Job photo",
+            url: photo.photoUrl,
+            category: normalizePhotoCategory(photo.category),
+          }))
+        );
+      } catch (error) {
+        console.error("Fetch job photos error:", error);
+      }
+    };
+
+    fetchJobPhotos();
+  }, [jobId]);
+
+  useEffect(() => {
+    const fetchRelatedInvoices = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await fetch("http://localhost:5050/api/invoices", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          const invoicesForJob = data.invoices
+            .filter((invoice: any) => invoice.jobId === jobId)
+            .map((invoice: any) => ({
+              id: invoice.id,
+              documentNumber: invoice.documentNumber,
+              type: invoice.type,
+              status: invoice.status,
+              total: Number(invoice.total),
+              balanceDue: Number(invoice.balanceDue),
+              createdAt: invoice.createdAt,
+            }));
+
+          setRelatedInvoices(invoicesForJob);
+        }
+      } catch (error) {
+        console.error("Fetch related invoices error:", error);
+      }
+    };
+
+    fetchRelatedInvoices();
+  }, [jobId]);
 
   if (!job) {
     return <div className="p-6">Job not found</div>;
@@ -395,7 +585,7 @@ export default function JobDetailsPage() {
 
   // Edit modal submission handler.
   function handleUpdateJob(updatedJob: {
-    id: number;
+    id: string;
     title: string;
     client: string;
     address: string;
@@ -426,7 +616,9 @@ export default function JobDetailsPage() {
         photos={photos}
         handlePhotoUpload={handlePhotoUpload}
         handlePhotoCategoryChange={handlePhotoCategoryChange}
+        handlePhotoDelete={handlePhotoDelete}
         openPhotoPreview={openPhotoPreview}
+        isUploadingPhoto={isUploadingPhoto}
       />
 
       {/* Photo preview modal: enlarged image view with navigation and category editing. */}
@@ -440,7 +632,7 @@ export default function JobDetailsPage() {
 
       {/* Document creation entry point: starts the invoice / estimate workflow. */}
       <div className="rounded-xl bg-white p-5 shadow-sm">
-        <h3 className="text-lg font-semibold text-[#0B1F3B]">
+        <h3 className="text-lg font-semibold text-brand-blue">
           Create Invoice or Estimate
         </h3>
         <p className="mt-1 py-4 text-sm text-gray-600">
@@ -451,6 +643,13 @@ export default function JobDetailsPage() {
           onClick={() => {
             setShowInvoicePreview(true);
             setIsDocumentFinalized(false);
+
+            setTimeout(() => {
+              invoiceSectionRef.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
+            }, 100);
           }}
           className="rounded-lg bg-brand-red px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
         >
@@ -460,26 +659,75 @@ export default function JobDetailsPage() {
 
       {/* Invoice / estimate preview section: line items, totals, payment instructions, finalize, export, and share. */}
       {showInvoicePreview ? (
-        <InvoicePreviewSection
-          job={job}
-          documentType={documentType}
-          setDocumentType={setDocumentType}
-          lineItems={lineItems}
-          setLineItems={setLineItems}
-          formattedTotal={formattedTotal}
-          paymentMethods={paymentMethods}
-          setPaymentMethods={setPaymentMethods}
-          dueDate={dueDate}
-          setDueDate={setDueDate}
-          isDocumentFinalized={isDocumentFinalized}
-          setIsDocumentFinalized={setIsDocumentFinalized}
-          setSelectedLineItemIndex={setSelectedLineItemIndex}
-          photos={photos}
-          handleExportDocument={handleExportDocument}
-          handleShareDocument={handleShareDocument}
-          openPhotoPreview={openPhotoPreview}
-        />
+        <div ref={invoiceSectionRef} className="scroll-mt-24">
+          <InvoicePreviewSection
+            job={job}
+            documentType={documentType}
+            setDocumentType={setDocumentType}
+            lineItems={lineItems}
+            setLineItems={setLineItems}
+            formattedTotal={formattedTotal}
+            paymentMethods={paymentMethods}
+            setPaymentMethods={setPaymentMethods}
+            dueDate={dueDate}
+            setDueDate={setDueDate}
+            isDocumentFinalized={isDocumentFinalized}
+            setIsDocumentFinalized={setIsDocumentFinalized}
+            setSelectedLineItemIndex={setSelectedLineItemIndex}
+            photos={photos}
+            handleExportDocument={handleExportDocument}
+            handleShareDocument={handleShareDocument}
+            openPhotoPreview={openPhotoPreview}
+          />
+        </div>
       ) : null}
+
+      {/* Related invoices section: quick view of invoices already created for this job. */}
+      <div className="rounded-xl bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-lg font-semibold text-brand-blue">
+              Related Invoices
+            </h3>
+            <p className="mt-1 text-sm text-gray-600">
+              Invoices and estimates already created for this job.
+            </p>
+          </div>
+        </div>
+
+        {relatedInvoices.length === 0 ? (
+          <div className="mt-4 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
+            No invoices created for this job yet.
+          </div>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {relatedInvoices.map((invoice) => (
+              <div
+                key={invoice.id}
+                className="flex flex-col gap-3 rounded-lg border border-gray-200 p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <p className="font-semibold text-brand-blue">
+                    {invoice.documentNumber}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {invoice.type} • {invoice.status} • {new Date(invoice.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+
+                <div className="text-left sm:text-right">
+                  <p className="font-semibold text-brand-blue">
+                    ${invoice.total.toFixed(2)}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Balance: ${invoice.balanceDue.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Photo selector modal: attaches uploaded photos to a specific line item. */}
       <PhotoSelectorModal

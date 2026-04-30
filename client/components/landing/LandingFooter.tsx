@@ -1,10 +1,17 @@
+import Image from "next/image";
 export default function LandingFooter() {
     return (
       <footer className="bg-brand-blue py-12 text-white">
         <div className="mx-auto max-w-6xl px-6 grid gap-10 md:grid-cols-3">
   
           <div>
-            <h3 className="text-lg font-bold">TruWork</h3>
+          <Image
+              src="/branding/truwork-monogram-alt.svg"
+              alt="TruWork"
+              width={64}
+              height={64}
+              priority
+            />
   
             <p className="mt-3 text-sm text-slate-300 leading-6">
               Professional invoicing for service businesses. Simple, fast, and

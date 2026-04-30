@@ -1,8 +1,9 @@
 "use client";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { House, Briefcase, Calendar, File, Users } from "lucide-react";
+import { House, Briefcase, Calendar, File, Menu, CirclePlus } from "lucide-react";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 
 type AppLayoutProps = {
   children: ReactNode;
@@ -13,7 +14,7 @@ const navLinks = [
   { href: "/jobs", label: "Jobs", icon: Briefcase },
   { href: "/schedule", label: "Schedule", icon: Calendar },
   { href: "/invoices", label: "Invoices", icon: File },
-  { href: "/team", label: "Team", icon: Users },
+  { href: "/menu", label: "Menu", icon: Menu },
 ];
 
 export default function AppLayout({ children }: AppLayoutProps) {
@@ -23,15 +24,22 @@ export default function AppLayout({ children }: AppLayoutProps) {
       {/* Mobile Top Bar */}
       <header className="border-b border-gray-200 bg-white md:hidden">
         <div className="flex items-center justify-between px-4 py-4">
-          <Link href="/dashboard" className="text-lg font-bold text-[#0B1F3B]">
-            TruWork
+          <Link href="/dashboard" className="flex items-center">
+            <Image
+              src="/branding/truwork-monogram.svg"
+              alt="TruWork"
+              width={36}
+              height={36}
+              priority
+            />
           </Link>
 
           <Link
-            href="/"
-            className="text-sm font-medium text-gray-600 transition hover:text-[#0B1F3B]"
+            href="/jobs?new=1"
+            aria-label="Add Job"
+            className="text-[#C62828] transition hover:opacity-80"
           >
-            Site
+            <CirclePlus size={28} strokeWidth={2} />
           </Link>
         </div>
       </header>
@@ -40,8 +48,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
         {/* Desktop Sidebar */}
         <aside className="hidden border-r border-gray-200 bg-white md:block">
           <div className="border-b border-gray-100 px-6 py-5">
-            <Link href="/dashboard" className="text-xl font-bold text-[#0B1F3B]">
-              TruWork
+            <Link href="/dashboard" className="flex items-center">
+              <Image
+                src="/branding/truwork-wordmark.svg"
+                alt="TruWork"
+                width={150}
+                height={34}
+                priority
+              />
             </Link>
           </div>
 
@@ -50,7 +64,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               <Link
                 key={link.href}
                 href={link.href}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-[#0B1F3B]"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-brand-blue"
               >
                 {link.label}
               </Link>
@@ -65,16 +79,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <div className="flex items-center justify-between px-6 py-4">
               <div>
                 <p className="text-sm text-gray-500">Welcome back</p>
-                <h1 className="text-lg font-semibold text-[#0B1F3B]">
-                  TruWork App
-                </h1>
               </div>
 
               <Link
-                href="/"
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                href="/jobs?new=1"
+                className="inline-flex items-center gap-2 rounded-lg bg-[#C62828] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
               >
-                Back to Site
+                <CirclePlus size={18} />
+                Add Job
               </Link>
             </div>
           </header>
@@ -93,12 +105,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
               className={`flex flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] font-medium transition ${
                 pathname === link.href
                   ? "text-[#C62828]"
-                  : "text-gray-600 hover:text-[#0B1F3B]"
+                  : "text-gray-600 hover:text-brand-blue"
               }`}
             >
               <link.icon
                 size={18}
-                className="text-[#0B1F3B]"
+                className="text-brand-blue"
               />
               <span>{link.label}</span>
             </Link>

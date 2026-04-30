@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 type InvoicePreviewSectionProps = {
     job: {
+      id: string;
       client: string;
       title: string;
       address: string;
@@ -61,13 +62,101 @@ export default function InvoicePreviewSection({
   handleShareDocument,
   openPhotoPreview,
 }: InvoicePreviewSectionProps) {
+  const [businessName, setBusinessName] = useState("Your Business Name");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [taxPercent, setTaxPercent] = useState("0");
+  const [depositPaid, setDepositPaid] = useState("0");
+
+  useEffect(() => {
+    const savedBusinessName = localStorage.getItem("truworkBusinessName");
+    const savedLogoUrl = localStorage.getItem("truworkLogoUrl");
+
+    if (savedBusinessName) setBusinessName(savedBusinessName);
+    if (savedLogoUrl) setLogoUrl(savedLogoUrl);
+  }, []);
+
+  const invoiceLineItems = useMemo(() => {
+    return lineItems.map((item) => {
+      const quantity = Number(item.quantity) || 1;
+      const unitPrice = Number(item.amount) || 0;
+
+      return {
+        description: item.description || "Line item",
+        quantity,
+        unitPrice,
+        lineTotal: quantity * unitPrice,
+      };
+    });
+  }, [lineItems]);
+
+  const subtotal = invoiceLineItems.reduce(
+    (sum, item) => sum + item.lineTotal,
+    0
+  );
+  const taxRate = Number(taxPercent) || 0;
+  const taxAmount = subtotal * (taxRate / 100);
+  const total = subtotal + taxAmount;
+  const depositAmount = Number(depositPaid) || 0;
+  const balanceDue = Math.max(total - depositAmount, 0);
+
+  const formattedSubtotal = subtotal.toFixed(2);
+  const formattedTaxAmount = taxAmount.toFixed(2);
+  const formattedDepositPaid = depositAmount.toFixed(2);
+  const formattedBalanceDue = balanceDue.toFixed(2);
+  const handleFinalizeDocument = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch("http://localhost:5050/api/invoices", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          jobId: job.id,
+          documentNumber: `TW-${Date.now()}`,
+          description: `${documentType} for ${job.title} | Business: ${businessName} | Due: ${dueDate}`,
+          paymentMethods,
+          subtotal,
+          tax: taxAmount,
+          total,
+          depositPaid: depositAmount,
+          balanceDue,
+          type: documentType === "ESTIMATE" ? "estimate" : "invoice",
+          status: "draft",
+          lineItems: invoiceLineItems,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        console.error(data.message);
+        return;
+      }
+
+      setIsDocumentFinalized(true);
+    } catch (error) {
+      console.error("Finalize invoice error:", error);
+    }
+  };
   return (
     <div className="rounded-xl bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between border-b-2 border-brand-red pb-6 mb-6">
         {/* left */}
-        <p className="font-semibold text-2xl text-brand-blue">
-          Your Business Name / Logo
-        </p>
+        <div className="flex items-center gap-3">
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={`${businessName} logo`}
+              className="h-12 w-12 rounded-lg object-cover"
+            />
+          ) : null}
+          <p className="font-semibold text-2xl text-brand-blue">
+            {businessName}
+          </p>
+        </div>
         {/* right */}
         <div className="flex items-center gap-2">
           <button
@@ -94,6 +183,42 @@ export default function InvoicePreviewSection({
           </button>
         </div>
       </div>
+      <section className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
+        <h3 className="text-sm font-semibold text-brand-blue">
+          Business Info for This Document
+        </h3>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">
+              Business Name
+            </label>
+            <input
+              value={businessName}
+              onChange={(e) => {
+                setBusinessName(e.target.value);
+                localStorage.setItem("truworkBusinessName", e.target.value);
+              }}
+              placeholder="Business name"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">
+              Logo URL
+            </label>
+            <input
+              value={logoUrl}
+              onChange={(e) => {
+                setLogoUrl(e.target.value);
+                localStorage.setItem("truworkLogoUrl", e.target.value);
+              }}
+              placeholder="https://example.com/logo.png"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
+      </section>
       <div className="mt-4 flex justify-end">
         <p className="font-bold text-3xl text-brand-blue">{documentType}</p>
       </div>
@@ -232,11 +357,57 @@ export default function InvoicePreviewSection({
         >
           Add Line Item
         </button>
+        <div className="mt-6 space-y-4 border-t border-gray-300 pt-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">
+                Tax %
+              </label>
+              <input
+                value={taxPercent}
+                onChange={(e) => setTaxPercent(e.target.value)}
+                placeholder="0"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              />
+            </div>
 
-        <div className="mt-6 flex justify-end border-t border-gray-300 pt-4">
-          <p className="text-lg font-semibold text-brand-blue">
-            Total: ${formattedTotal}
-          </p>
+            <div>
+              <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">
+                Deposit Paid
+              </label>
+              <input
+                value={depositPaid}
+                onChange={(e) => setDepositPaid(e.target.value)}
+                placeholder="0.00"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="ml-auto w-full max-w-sm space-y-2 text-sm">
+            <div className="flex justify-between text-gray-600">
+              <span>Subtotal</span>
+              <span>${formattedSubtotal}</span>
+            </div>
+            <div className="flex justify-between text-gray-600">
+              <span>Tax ({taxRate}%)</span>
+              <span>${formattedTaxAmount}</span>
+            </div>
+            <div className="flex justify-between font-semibold text-brand-blue">
+              <span>Total</span>
+              <span>${total.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-gray-600">
+              <span>Deposit Paid</span>
+              <span>${formattedDepositPaid}</span>
+            </div>
+            <div className="border-t border-gray-300 pt-2">
+              <div className="flex justify-between text-lg font-bold text-brand-blue">
+                <span>Balance Due</span>
+                <span>${formattedBalanceDue}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -321,7 +492,7 @@ export default function InvoicePreviewSection({
         <div className="flex flex-col gap-3 border-t border-gray-300 pt-6 sm:flex-row sm:items-center sm:justify-end">
           <button
             type="button"
-            onClick={() => setIsDocumentFinalized(true)}
+            onClick={handleFinalizeDocument}
             disabled={isDocumentFinalized}
             className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
               isDocumentFinalized

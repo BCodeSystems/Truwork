@@ -1,11 +1,18 @@
+import Image from "next/image";
 export default function LandingNavbar() {
     return (
-        <header className="border-b border-hray-100 bg-white">
+        <header className="border-b border-gray-100 bg-white">
             <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
                 {/* Logo */}
-                <div className="text-lg font-bold text-[#0B1F3B]">
-                    TruWork
-                </div>
+                <a href="/" className="flex items-center">
+                    <Image
+                        src="/branding/truwork-wordmark.svg"
+                        alt="TruWork"
+                        width={114}
+                        height={25}
+                        priority
+                    />
+                </a>
                 {/* CTA */}
                 <a
                 href="/login"

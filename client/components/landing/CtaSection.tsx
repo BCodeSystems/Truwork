@@ -12,7 +12,7 @@ export default function CtaSection() {
           </p>
   
           <a
-            href="/login"
+            href="/signup"
             className="mt-8 inline-block rounded-lg bg-white px-6 py-3 text-sm font-semibold text-[#C62828] hover:opacity-90"
           >
             Start Free Trial

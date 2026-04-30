@@ -2,24 +2,28 @@ import React from "react";
 
 type PhotosSectionProps = {
   photos: {
-    id: number;
+    id: string;
     name: string;
     url: string;
     category: "Before" | "During" | "After";
   }[];
   handlePhotoUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handlePhotoCategoryChange: (
-    photoId: number,
+    photoId: string,
     category: "Before" | "During" | "After"
   ) => void;
+  handlePhotoDelete: (photoId: string) => void;
   openPhotoPreview: (index: number) => void;
+  isUploadingPhoto?: boolean;
 };
 
 export default function PhotosSection({
   photos,
   handlePhotoUpload,
   handlePhotoCategoryChange,
+  handlePhotoDelete,
   openPhotoPreview,
+  isUploadingPhoto = false,
 }: PhotosSectionProps) {
   return (
     <div className="rounded-xl bg-white p-5 shadow-sm">
@@ -30,13 +34,20 @@ export default function PhotosSection({
             Upload before, during, and after photos for this job.
           </p>
         </div>
-        <label className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-brand-red px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
-          + Add Photo
+        <label
+          className={`inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white hover:opacity-90 ${
+            isUploadingPhoto
+              ? "cursor-not-allowed bg-gray-400"
+              : "cursor-pointer bg-brand-red"
+          }`}
+        >
+          {isUploadingPhoto ? "Uploading..." : "+ Add Photo"}
           <input
             type="file"
             accept="image/*"
             multiple
             onChange={handlePhotoUpload}
+            disabled={isUploadingPhoto}
             className="hidden"
           />
         </label>
@@ -65,20 +76,30 @@ export default function PhotosSection({
                 />
               </button>
               <div className="space-y-2 p-3">
-                <select
-                  value={photo.category}
-                  onChange={(e) =>
-                    handlePhotoCategoryChange(
-                      photo.id,
-                      e.target.value as "Before" | "During" | "After"
-                    )
-                  }
-                  className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-700 focus:border-[#0B1F3B] focus:outline-none"
-                >
-                  <option value="Before">Before</option>
-                  <option value="During">During</option>
-                  <option value="After">After</option>
-                </select>
+                <div className="flex items-center justify-between gap-2">
+                  <select
+                    value={photo.category}
+                    onChange={(e) =>
+                      handlePhotoCategoryChange(
+                        photo.id,
+                        e.target.value as "Before" | "During" | "After"
+                      )
+                    }
+                    className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-700 focus:border-[#0B1F3B] focus:outline-none"
+                  >
+                    <option value="Before">Before</option>
+                    <option value="During">During</option>
+                    <option value="After">After</option>
+                  </select>
+
+                  <button
+                    type="button"
+                    onClick={() => handlePhotoDelete(photo.id)}
+                    className="rounded-full border border-red-100 px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-50"
+                  >
+                    Delete
+                  </button>
+                </div>
                 <p className="truncate text-sm text-gray-600">{photo.name}</p>
               </div>
             </div>

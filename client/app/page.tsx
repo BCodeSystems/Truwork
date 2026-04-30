@@ -4,6 +4,7 @@ import {
   FeaturesSection,
   ProcessSection,
   InstallOnPhoneSection,
+  PricingSection,
   TestimonialsSection,
   CtaSection,
   LandingFooter,
@@ -16,10 +17,11 @@ export default function Home() {
       <HeroSection />
       <FeaturesSection />
       <ProcessSection />
+      <PricingSection />
       <section id="install">
         <InstallOnPhoneSection />
       </section>
-      <TestimonialsSection />
+      {/* <TestimonialsSection /> */}
       <CtaSection />
       <LandingFooter />
     </main>

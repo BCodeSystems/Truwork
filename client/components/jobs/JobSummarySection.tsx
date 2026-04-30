@@ -52,15 +52,15 @@ export default function JobSummarySection({
 
           <div className="mt-4 space-y-3 text-sm text-gray-700">
             <p>
-              <span className="font-medium text-[#0B1F3B]">Client:</span>{" "}
+              <span className="font-medium text-brand-blue">Client:</span>{" "}
               {job.client}
             </p>
             <p>
-              <span className="font-medium text-[#0B1F3B]">Phone:</span>{" "}
+              <span className="font-medium text-brand-blue">Phone:</span>{" "}
               {job.phone}
             </p>
             <p>
-              <span className="font-medium text-[#0B1F3B]">Address:</span>{" "}
+              <span className="font-medium text-brand-blue">Address:</span>{" "}
               {job.address}
             </p>
           </div>
@@ -73,15 +73,15 @@ export default function JobSummarySection({
 
           <div className="mt-4 space-y-3 text-sm text-gray-700">
             <p>
-              <span className="font-medium text-[#0B1F3B]">Scheduled:</span>{" "}
+              <span className="font-medium text-brand-blue">Scheduled:</span>{" "}
               {job.date}
             </p>
             <p>
-              <span className="font-medium text-[#0B1F3B]">Status:</span>{" "}
+              <span className="font-medium text-brand-blue">Status:</span>{" "}
               {job.status}
             </p>
             <p>
-              <span className="font-medium text-[#0B1F3B]">Service:</span>{" "}
+              <span className="font-medium text-brand-blue">Service:</span>{" "}
               {job.title}
             </p>
           </div>

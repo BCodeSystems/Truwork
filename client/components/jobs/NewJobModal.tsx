@@ -5,6 +5,9 @@ type Job = {
   title: string;
   client: string;
   address: string;
+  clientPhone?: string;
+  clientEmail?: string;
+  description?: string;
   date: string;
   status: string;
 };
@@ -16,6 +19,57 @@ type NewJobModalProps = {
   initialJob?: Job | null;
 };
 
+function formatJobDateTime(date: string, time: string) {
+  if (!date) return "";
+
+  const dateParts = new Date(`${date}T00:00:00`);
+  const formattedDate = dateParts.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  if (!time) return formattedDate;
+
+  const [hoursString, minutes] = time.split(":");
+  const hours = Number(hoursString);
+  const suffix = hours >= 12 ? "PM" : "AM";
+  const displayHours = hours % 12 === 0 ? 12 : hours % 12;
+
+  return `${formattedDate} • ${displayHours}:${minutes} ${suffix}`;
+}
+
+function getInitialDateAndTime(dateValue: string) {
+  if (!dateValue) {
+    return { date: "", time: "" };
+  }
+
+  const [datePart, timePart] = dateValue.split(" • ");
+  const parsedDate = new Date(datePart);
+
+  const formattedDate = Number.isNaN(parsedDate.getTime())
+    ? ""
+    : parsedDate.toISOString().split("T")[0];
+
+  if (!timePart) {
+    return { date: formattedDate, time: "" };
+  }
+
+  const [timeValue, suffix] = timePart.split(" ");
+  const [hoursString, minutes] = timeValue.split(":");
+  let hours = Number(hoursString);
+
+  if (suffix === "PM" && hours !== 12) hours += 12;
+  if (suffix === "AM" && hours === 12) hours = 0;
+
+  const formattedTime = `${String(hours).padStart(2, "0")}:${minutes}`;
+
+  return {
+    date: formattedDate,
+    time: formattedTime,
+  };
+}
+
 export default function NewJobModal({
   isOpen,
   onClose,
@@ -26,30 +80,44 @@ export default function NewJobModal({
     title: "",
     client: "",
     address: "",
+    clientPhone: "",
+    clientEmail: "",
+    description: "",
     date: "",
+    time: "",
   });
 
   useEffect(() => {
-    if (initialJob) { 
+    if (initialJob) {
+      const { date, time } = getInitialDateAndTime(initialJob.date);
+
       setForm({
         title: initialJob.title,
         client: initialJob.client,
         address: initialJob.address,
-        date: initialJob.date,
+        clientPhone: initialJob.clientPhone ?? "",
+        clientEmail: initialJob.clientEmail ?? "",
+        description: initialJob.description ?? "",
+        date,
+        time,
       });
-    } else { 
+    } else {
       setForm({
         title: "",
         client: "",
         address: "",
+        clientPhone: "",
+        clientEmail: "",
+        description: "",
         date: "",
+        time: "",
       });
     }
   }, [initialJob, isOpen]);
 
   if (!isOpen) return null;
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     setForm({
       ...form,
       [e.target.name]: e.target.value,
@@ -64,7 +132,10 @@ export default function NewJobModal({
       title: form.title,
       client: form.client,
       address: form.address,
-      date: form.date,
+      clientPhone: form.clientPhone,
+      clientEmail: form.clientEmail,
+      description: form.description,
+      date: formatJobDateTime(form.date, form.time),
       status: initialJob ? initialJob.status : "Scheduled",
     };
 
@@ -74,7 +145,11 @@ export default function NewJobModal({
       title: "",
       client: "",
       address: "",
+      clientPhone: "",
+      clientEmail: "",
+      description: "",
       date: "",
+      time: "",
     });
 
     onClose();
@@ -105,7 +180,7 @@ export default function NewJobModal({
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
             <label className="text-sm font-medium text-gray-700">
-              Job Title
+              Job Name
             </label>
             <input
               type="text"
@@ -145,18 +220,76 @@ export default function NewJobModal({
             />
           </div>
 
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Client Phone
+              </label>
+              <input
+                type="tel"
+                name="clientPhone"
+                value={form.clientPhone}
+                onChange={handleChange}
+                placeholder="Client phone (optional)"
+                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#0B1F3B] focus:outline-none focus:ring-2 focus:ring-[#0B1F3B]"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Client Email
+              </label>
+              <input
+                type="email"
+                name="clientEmail"
+                value={form.clientEmail}
+                onChange={handleChange}
+                placeholder="Client email (optional)"
+                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#0B1F3B] focus:outline-none focus:ring-2 focus:ring-[#0B1F3B]"
+              />
+            </div>
+          </div>
+
           <div>
             <label className="text-sm font-medium text-gray-700">
-              Date / Time
+              Job Notes
             </label>
-            <input
-              type="text"
-              name="date"
-              value={form.date}
+            <textarea
+              name="description"
+              value={form.description}
               onChange={handleChange}
-              placeholder="Ex: Today • 10:00 AM"
+              placeholder="Job notes (optional)"
+              rows={3}
               className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#0B1F3B] focus:outline-none focus:ring-2 focus:ring-[#0B1F3B]"
             />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Date
+              </label>
+              <input
+                type="date"
+                name="date"
+                value={form.date}
+                onChange={handleChange}
+                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#0B1F3B] focus:outline-none focus:ring-2 focus:ring-[#0B1F3B]"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Time
+              </label>
+              <input
+                type="time"
+                name="time"
+                value={form.time}
+                onChange={handleChange}
+                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#0B1F3B] focus:outline-none focus:ring-2 focus:ring-[#0B1F3B]"
+              />
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-2">

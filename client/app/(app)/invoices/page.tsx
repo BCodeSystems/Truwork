@@ -1,7 +1,7 @@
 "use client";
 
 import InvoicesList from "@/components/invoices/InvoicesList";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // Invoice data shape for this page (matches child components)
 type Invoice = {
@@ -12,6 +12,21 @@ type Invoice = {
   type: "INVOICE" | "ESTIMATE";
   status: "DRAFT" | "SENT" | "PAID";
   date: string;
+  documentNumber?: string;
+  description?: string | null;
+  subtotal?: number;
+  tax?: number;
+  depositPaid?: number;
+  balanceDue?: number;
+  paymentMethods?: string[];
+  dueDate?: string | null;
+  lineItems?: {
+    id: string;
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    lineTotal: number;
+  }[];
 };
 
 // Temporary mock data for V1
@@ -38,10 +53,65 @@ const mockInvoices: Invoice[] = [
 
 export default function InvoicesPage() {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await fetch("http://localhost:5050/api/invoices", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          const formatted = data.invoices.map((inv: any) => ({
+            id: inv.id,
+            client: inv.job?.customerName || "Unknown",
+            job: inv.job?.title || "Job",
+            amount: Number(inv.total),
+            type: inv.type?.toUpperCase() === "ESTIMATE" ? "ESTIMATE" : "INVOICE",
+            status: inv.status?.toUpperCase() === "PAID"
+              ? "PAID"
+              : inv.status?.toUpperCase() === "SENT"
+              ? "SENT"
+              : "DRAFT",
+            date: new Date(inv.createdAt).toLocaleDateString(),
+            documentNumber: inv.documentNumber,
+            description: inv.description,
+            subtotal: Number(inv.subtotal),
+            tax: Number(inv.tax),
+            depositPaid: Number(inv.depositPaid),
+            balanceDue: Number(inv.balanceDue),
+            paymentMethods: inv.paymentMethods ?? [],
+            dueDate: inv.dueDate ?? null,
+            lineItems: inv.lineItems?.map((item: any) => ({
+              id: item.id,
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: Number(item.unitPrice),
+              lineTotal: Number(item.lineTotal),
+            })) ?? [],
+          }));
+
+          setInvoices(formatted);
+        }
+      } catch (error) {
+        console.error("Fetch invoices error:", error);
+      }
+    };
+
+    fetchInvoices();
+  }, []);
+
   return (
     <section className="space-y-4">
       {/* Page header */}
-      <div className="rounded-xl bg-white p-5 shadow-sm">
+      <div>
         <h2 className="text-2xl font-bold text-brand-blue">Invoices</h2>
         <p className="mt-2 text-sm text-gray-600">
           See previous invoices to resend or review.
@@ -49,11 +119,13 @@ export default function InvoicesPage() {
       </div>
 
       {/* Invoices list */}
-      <InvoicesList
-        invoices={mockInvoices}
-        selectedInvoiceId={selectedInvoiceId}
-        setSelectedInvoiceId={setSelectedInvoiceId}
-      />
+      <div className="border-t border-gray-200 pt-4">
+        <InvoicesList
+          invoices={invoices}
+          selectedInvoiceId={selectedInvoiceId}
+          setSelectedInvoiceId={setSelectedInvoiceId}
+        />
+      </div>
     </section>
   );
 }

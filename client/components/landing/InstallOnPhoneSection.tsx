@@ -3,7 +3,7 @@ import { Share, Plus, Smartphone } from "lucide-react";
 const iphoneSteps = [
   {
     text: "Tap the Share button in Safari",
-    icon: <Share className="h-4 w-4 text-[#0B1F3B]" />,
+    icon: <Share className="h-4 w-4 text-brand-blue" />,
   },
   {
     text: "Scroll down and tap 'Add to Home Screen'",
@@ -22,7 +22,7 @@ const androidSteps = [
   },
   {
     text: "Tap 'Add to Home screen'",
-    icon: <Plus className="h-4 w-4 text-[#0B1F3B]" />,
+    icon: <Plus className="h-4 w-4 text-brand-blue" />,
   },
   {
     text: "Confirm by tapping 'Add'",
@@ -58,7 +58,7 @@ function InstallCard({
           <Smartphone className="h-6 w-6 text-white" />
         </div>
 
-        <h3 className="text-xl font-bold text-[#0B1F3B]">{title}</h3>
+        <h3 className="text-xl font-bold text-brand-blue">{title}</h3>
       </div>
 
       <ol className="space-y-4">
@@ -84,7 +84,7 @@ export default function InstallOnPhoneSection() {
     <section className="bg-gray-50 py-20">
       <div className="mx-auto max-w-4xl px-6">
         <div className="mx-auto mb-12 max-w-2xl text-center">
-          <h2 className="text-3xl font-bold text-[#0B1F3B]">
+          <h2 className="text-3xl font-bold text-brand-blue">
             Install TruWork on Your Phone
           </h2>
 
@@ -104,7 +104,7 @@ export default function InstallOnPhoneSection() {
               💡
             </div>
 
-            <h3 className="font-bold text-[#0B1F3B]">
+            <h3 className="font-bold text-brand-blue">
               Why install as an app?
             </h3>
           </div>

@@ -25,7 +25,7 @@ const testimonials = [
         <div className="mx-auto max-w-6xl px-6">
   
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-[#0B1F3B]">
+            <h2 className="text-3xl font-bold text-brand-blue">
               Trusted by Service Businesses
             </h2>
   
@@ -47,7 +47,7 @@ const testimonials = [
                 </p>
   
                 <div className="mt-6">
-                  <p className="font-semibold text-[#0B1F3B]">
+                  <p className="font-semibold text-brand-blue">
                     {testimonial.name}
                   </p>
   

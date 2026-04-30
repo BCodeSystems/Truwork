@@ -19,7 +19,7 @@ export default function JobCard({ job }: JobCardProps) {
         <article className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition hover:shadow-md">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-[#0B1F3B]">
+              <h3 className="text-lg font-semibold text-brand-blue">
                 {job.title}
               </h3>
 

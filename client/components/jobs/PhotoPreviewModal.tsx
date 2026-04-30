@@ -45,7 +45,7 @@ export default function PhotoPreviewModal({
 
           <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-[#0B1F3B]">
+              <p className="text-sm font-medium text-brand-blue">
                 {photos[selectedPhotoIndex].name}
               </p>
 
