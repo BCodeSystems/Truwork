@@ -5,6 +5,16 @@ export const getDashboardSummary = async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
 
+    const currentUser = await prisma.user.findUnique({
+      where: {
+        id: user.userId,
+      },
+      select: {
+        name: true,
+        email: true,
+      },
+    });
+
     const now = new Date();
 
     const startOfToday = new Date(now);
@@ -100,6 +110,9 @@ export const getDashboardSummary = async (req: Request, res: Response) => {
 
     return res.status(200).json({
       success: true,
+      user: {
+        name: currentUser?.name || currentUser?.email || "there",
+      },
       summary: {
         todaysJobs,
         openInvoices,

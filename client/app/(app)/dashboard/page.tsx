@@ -24,6 +24,7 @@ export default function DashboardPage() {
     jobs: [] as any[],
     invoices: [] as any[],
   });
+  const [userName, setUserName] = useState<string>("");
 
   const mergedActivity = [
     ...recentActivity.jobs.map((job) => ({
@@ -60,6 +61,9 @@ export default function DashboardPage() {
           if (data.recentActivity) {
             setRecentActivity(data.recentActivity);
           }
+          if (data.user && data.user.name) {
+            setUserName(data.user.name);
+          }
         }
       } catch (error) {
         console.error("Dashboard fetch error:", error);
@@ -73,7 +77,7 @@ export default function DashboardPage() {
       <section className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold text-brand-blue">
-            {greeting}, Mike
+            {greeting}, {userName || "there"}
           </h2>
           <p className="mt-1 text-sm text-gray-600">
             Here is what is scheduled, open, and owed right now.
