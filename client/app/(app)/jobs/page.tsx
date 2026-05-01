@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import  JobCard from "@/components/jobs/JobCard"
 import NewJobModal from "@/components/jobs/NewJobModal";
@@ -43,7 +43,7 @@ const initialJobs: Job[] = [
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
 
-export default function JobsPage() {
+function JobsPageContent() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const router = useRouter();
@@ -128,5 +128,13 @@ export default function JobsPage() {
         onSubmit={handleAddJob}
       />
     </section>
+  );
+}
+
+export default function JobsPage() {
+  return (
+    <Suspense fallback={<div className="p-6">Loading jobs...</div>}>
+      <JobsPageContent />
+    </Suspense>
   );
 }
