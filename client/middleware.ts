@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/dashboard"];
+const PUBLIC_PATHS = ["/"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow dashboard to be visible without the gate
+  // Allow the landing page to be visible without the beta gate
   if (PUBLIC_PATHS.includes(pathname)) {
     return NextResponse.next();
   }
@@ -14,8 +14,13 @@ export function middleware(request: NextRequest) {
   // Allow Next/internal assets so the app can load correctly
   if (
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon.ico") ||
-    pathname.startsWith("/branding")
+    pathname === "/favicon.ico" ||
+    pathname === "/manifest.json" ||
+    pathname === "/apple-touch-icon.png" ||
+    pathname === "/web-app-manifest-192x192.png" ||
+    pathname === "/web-app-manifest-512x512.png" ||
+    pathname.startsWith("/branding") ||
+    pathname.startsWith("/images")
   ) {
     return NextResponse.next();
   }
@@ -39,7 +44,7 @@ export function middleware(request: NextRequest) {
   }
 
   const encoded = auth.split(" ")[1];
-  const decoded = Buffer.from(encoded, "base64").toString();
+  const decoded = atob(encoded);
   const [user, pass] = decoded.split(":");
 
   if (user === username && pass === password) {
@@ -50,5 +55,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
