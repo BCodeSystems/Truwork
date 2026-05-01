@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ScheduleList from "@/components/schedule/ScheduleList";
 
 // Schedule item shape for this page.
@@ -11,31 +11,6 @@ type ScheduleItem = {
   client: string;
   address: string;
 };
-
-// Temporary mock schedule data for V1.
-const mockScheduleItems: ScheduleItem[] = [
-  {
-    id: "1",
-    job: "Kitchen Sink Repair",
-    time: "10:00",
-    client: "Sarah Johnson",
-    address: "123 Main St, San Diego, CA",
-  },
-  {
-    id: "2",
-    job: "Weekly Lawn Maintenance",
-    time: "13:30",
-    client: "Mike Rodriguez",
-    address: "456 Oak Ave, Chula Vista, CA",
-  },
-  {
-    id: "3",
-    job: "Drywall Patch Repair",
-    time: "09:00",
-    client: "Monica Lee",
-    address: "789 Palm St, National City, CA",
-  },
-];
 
 function formatTime(time: string) {
   const [hoursString, minutes] = time.split(":");
@@ -49,12 +24,49 @@ function formatTime(time: string) {
 export default function SchedulePage() {
   const [selectedScheduleItemId, setSelectedScheduleItemId] =
     useState<string | null>(null);
-  const scheduleItems = [...mockScheduleItems]
-    .sort((a, b) => a.time.localeCompare(b.time))
-    .map((item) => ({
-      ...item,
-      time: formatTime(item.time),
-    }));
+  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
+
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs`, {
+          credentials: "include",
+        });
+
+        const data = await res.json();
+
+        if (data.success && data.jobs) {
+          const formatted = data.jobs.map((job: any) => {
+            const scheduledDate = new Date(job.scheduledAt);
+
+            const timeString = scheduledDate.toLocaleTimeString("en-US", {
+              hour12: false,
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+
+            return {
+              id: job.id,
+              job: job.title,
+              time: formatTime(timeString),
+              client: job.customerName,
+              address: job.serviceAddress,
+            };
+          });
+
+          setScheduleItems(formatted);
+        }
+      } catch (error) {
+        console.error("Schedule fetch error:", error);
+      }
+    };
+
+    fetchSchedule();
+  }, []);
+
+  const sortedScheduleItems = [...scheduleItems].sort((a, b) =>
+    a.time.localeCompare(b.time)
+  );
 
   return (
     <section className="space-y-4">
@@ -67,7 +79,7 @@ export default function SchedulePage() {
 
       <div className="border-t border-gray-200 pt-4">
         <ScheduleList
-          scheduleItems={scheduleItems}
+          scheduleItems={sortedScheduleItems}
           selectedScheduleItemId={selectedScheduleItemId}
           setSelectedScheduleItemId={setSelectedScheduleItemId}
         />
