@@ -38,6 +38,7 @@ type JobPhoto = {
   category: "Before" | "During" | "After";
 };
 
+
 function normalizePhotoCategory(
   category?: string
 ): "Before" | "During" | "After" {
@@ -45,6 +46,9 @@ function normalizePhotoCategory(
   if (category === "after") return "After";
   return "Before";
 }
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
 
 export default function JobDetailsPage() {
   // Route params and page-level UI state.
@@ -105,7 +109,7 @@ export default function JobDetailsPage() {
         formData.append("category", "before");
 
         const res = await fetch(
-          `http://localhost:5050/api/jobs/${jobId}/photos`,
+          `${API_BASE_URL}/api/jobs/${jobId}/photos`,
           {
             method: "POST",
             headers: {
@@ -155,7 +159,7 @@ export default function JobDetailsPage() {
       const token = localStorage.getItem("token");
 
       const res = await fetch(
-        `http://localhost:5050/api/jobs/${jobId}/photos/${photoId}`,
+        `${API_BASE_URL}/api/jobs/${jobId}/photos/${photoId}`,
         {
           method: "PATCH",
           headers: {
@@ -191,7 +195,7 @@ export default function JobDetailsPage() {
       const token = localStorage.getItem("token");
 
       const res = await fetch(
-        `http://localhost:5050/api/jobs/${jobId}/photos/${photoId}`,
+        `${API_BASE_URL}/api/jobs/${jobId}/photos/${photoId}`,
         {
           method: "DELETE",
           headers: {
@@ -480,7 +484,7 @@ export default function JobDetailsPage() {
       try {
         const token = localStorage.getItem("token");
 
-        const res = await fetch(`http://localhost:5050/api/jobs/${jobId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/jobs/${jobId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -513,7 +517,7 @@ export default function JobDetailsPage() {
         const token = localStorage.getItem("token");
 
         const res = await fetch(
-          `http://localhost:5050/api/jobs/${jobId}/photos`,
+          `${API_BASE_URL}/api/jobs/${jobId}/photos`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -548,7 +552,7 @@ export default function JobDetailsPage() {
       try {
         const token = localStorage.getItem("token");
 
-        const res = await fetch("http://localhost:5050/api/invoices", {
+        const res = await fetch(`${API_BASE_URL}/api/invoices`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

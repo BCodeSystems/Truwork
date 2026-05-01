@@ -40,6 +40,9 @@ const initialJobs: Job[] = [
   },
 ];
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
+
 export default function JobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -61,7 +64,7 @@ export default function JobsPage() {
       try {
         const token = localStorage.getItem("token");
 
-        const res = await fetch("http://localhost:5050/api/jobs", {
+        const res = await fetch(`${API_BASE_URL}/api/jobs`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

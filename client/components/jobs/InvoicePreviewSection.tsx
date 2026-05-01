@@ -13,7 +13,7 @@ type InvoicePreviewSectionProps = {
       description: string;
       quantity: string;
       amount: string;
-      photoIds: number[];
+      photoIds: string[];
     }[];
     setLineItems: React.Dispatch<
       React.SetStateAction<
@@ -21,7 +21,7 @@ type InvoicePreviewSectionProps = {
           description: string;
           quantity: string;
           amount: string;
-          photoIds: number[];
+          photoIds: string[];
         }[]
       >
     >;
@@ -34,7 +34,7 @@ type InvoicePreviewSectionProps = {
     setIsDocumentFinalized: React.Dispatch<React.SetStateAction<boolean>>;
     setSelectedLineItemIndex: React.Dispatch<React.SetStateAction<number | null>>;
     photos: {
-      id: number;
+      id: string;
       name: string;
       url: string;
       category: "Before" | "During" | "After";
@@ -66,6 +66,8 @@ export default function InvoicePreviewSection({
   const [logoUrl, setLogoUrl] = useState("");
   const [taxPercent, setTaxPercent] = useState("0");
   const [depositPaid, setDepositPaid] = useState("0");
+  const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
 
   useEffect(() => {
     const savedBusinessName = localStorage.getItem("truworkBusinessName");
@@ -107,7 +109,7 @@ export default function InvoicePreviewSection({
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:5050/api/invoices", {
+      const res = await fetch(`${API_BASE_URL}/api/invoices`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

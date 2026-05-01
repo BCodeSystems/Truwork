@@ -9,6 +9,9 @@ function getGreeting() {
   return "Good evening";
 }
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
+
 export default function DashboardPage() {
   const greeting = getGreeting();
   const [summary, setSummary] = useState({
@@ -43,9 +46,8 @@ export default function DashboardPage() {
     const fetchDashboard = async () => {
       try {
         const token = localStorage.getItem("token");
-        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
 
-        const res = await fetch(`${baseUrl}/api/dashboard`, {
+        const res = await fetch(`${API_BASE_URL}/api/dashboard`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
