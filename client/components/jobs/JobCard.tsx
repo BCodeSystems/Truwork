@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 type Job = {
-    id: number;
+    id: String;
     title: string;
     client: string;
     address: string;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 type Job = {
-  id: number;
+  id: string;
   title: string;
   client: string;
   address: string;
@@ -128,7 +128,7 @@ export default function NewJobModal({
     e.preventDefault();
 
     const newJob: Job = {
-      id: initialJob ? initialJob.id : Date.now(),
+      id: initialJob ? initialJob.id : crypto.randomUUID(),
       title: form.title,
       client: form.client,
       address: form.address,

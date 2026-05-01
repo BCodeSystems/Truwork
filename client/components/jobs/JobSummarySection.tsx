@@ -9,7 +9,7 @@ type JobSummarySectionProps = {
     status: string;
     date: string;
   };
-  jobId: number;
+  jobId: string;
   onEdit: () => void;
 };
 

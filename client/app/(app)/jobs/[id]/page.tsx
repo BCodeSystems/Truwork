@@ -274,7 +274,11 @@ export default function JobDetailsPage() {
       .replaceAll("'", "&#39;");
   }
 
-  function handleExportDocument() {
+function handleExportDocument() {
+  if (!job) {
+    window.alert("Job details are still loading. Please try again.");
+    return;
+  }
     const lineItemsMarkup = lineItems
       .map((item) => {
         const lineTotal =
@@ -451,6 +455,10 @@ export default function JobDetailsPage() {
   }
 
   async function handleShareDocument() {
+    if (!job) {
+      window.alert("Job details are still loading. Please try again.");
+      return;
+    }
     const shareText = `Client: ${job.client}\nJob: ${job.title}\nTotal: $${formattedTotal}\nAccepted Payment Methods: ${selectedPaymentMethodsText}\nDue Date: ${dueDateText}`;
 
     if (navigator.share) {
@@ -610,7 +618,7 @@ export default function JobDetailsPage() {
     <section className="space-y-6">
       {/* Job summary section: header, status, client info, and job details. */}
       <JobSummarySection
-        job={job}
+        job={{ ...job, phone: job.phone ?? "" }}
         jobId={jobId}
         onEdit={() => setIsEditOpen(true)}
       />

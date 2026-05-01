@@ -3,7 +3,7 @@ import React from "react";
 type PhotoPreviewModalProps = {
   selectedPhotoIndex: number | null;
   photos: {
-    id: number;
+    id: string;
     name: string;
     url: string;
     category: "Before" | "During" | "After";
@@ -11,7 +11,7 @@ type PhotoPreviewModalProps = {
   closePhotoPreview: () => void;
   changePreviewPhoto: (direction: "prev" | "next") => void;
   handlePhotoCategoryChange: (
-    photoId: number,
+    photoId: string,
     category: "Before" | "During" | "After"
   ) => void;
 };

@@ -5,15 +5,15 @@ type PhotoSelectorModalProps = {
     description: string;
     quantity: string;
     amount: string;
-    photoIds: number[];
+    photoIds: string[];
   }[];
   photos: {
-    id: number;
+    id: string;
     name: string;
     url: string;
     category: "Before" | "During" | "After";
   }[];
-  togglePhotoForLineItem: (photoId: number) => void;
+  togglePhotoForLineItem: (photoId: string) => void;
   closeLineItemPhotoSelector: () => void;
 };
 

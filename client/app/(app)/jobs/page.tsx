@@ -5,7 +5,7 @@ import  JobCard from "@/components/jobs/JobCard"
 import NewJobModal from "@/components/jobs/NewJobModal";
 
 type Job = {
-  id: number;
+  id: string;
   title: string;
   client: string;
   address: string;
@@ -15,7 +15,7 @@ type Job = {
 
 const initialJobs: Job[] = [
   {
-    id: 1,
+    id: "1",
     title: "Kitchen Sink Repair",
     client: "Sarah Johnson",
     address: "123 Main St, San Diego, CA",
@@ -23,7 +23,7 @@ const initialJobs: Job[] = [
     date: "Today • 10:00 AM",
   },
   {
-    id: 2,
+    id: "2",
     title: "Weekly Lawn Maintenance",
     client: "Mike Rodriguez",
     address: "456 Oak Ave, Chula Vista, CA",
@@ -31,7 +31,7 @@ const initialJobs: Job[] = [
     date: "Today • 1:30 PM",
   },
   {
-    id: 3,
+    id: "3",
     title: "Garage Cleanout",
     client: "Tom Chen",
     address: "789 Pine Rd, Oceanside, CA",
