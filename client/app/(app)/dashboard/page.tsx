@@ -77,7 +77,7 @@ export default function DashboardPage() {
       <section className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold text-brand-blue">
-            {greeting}, {userName || "there"}
+            {userName ? `${greeting}, ${userName}` : greeting}
           </h2>
           <p className="mt-1 text-sm text-gray-600">
             Here is what is scheduled, open, and owed right now.
