@@ -484,12 +484,16 @@ function handleExportDocument() {
   // Current job loaded from the backend using the route id.
   const jobId = params.id;
   const [job, setJob] = useState<Job | null>(null);
+  const [isLoadingJob, setIsLoadingJob] = useState(true);
+  const [jobError, setJobError] = useState("");
   const [relatedInvoices, setRelatedInvoices] = useState<RelatedInvoice[]>([]);
   const invoiceSectionRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const fetchJob = async () => {
       try {
+        setIsLoadingJob(true);
+        setJobError("");
         const token = localStorage.getItem("token");
 
         const res = await fetch(`${API_BASE_URL}/api/jobs/${jobId}`, {
@@ -500,19 +504,27 @@ function handleExportDocument() {
 
         const data = await res.json();
 
-        if (data.success) {
-          setJob({
-            id: data.job.id,
-            title: data.job.title,
-            client: data.job.customerName,
-            address: data.job.serviceAddress,
-            phone: data.job.customerPhone ?? "",
-            status: data.job.status,
-            date: new Date(data.job.scheduledAt).toLocaleString(),
-          });
+        if (!res.ok || !data.success || !data.job) {
+          setJob(null);
+          setJobError(data.message || "Job not found.");
+          return;
         }
+
+        setJob({
+          id: data.job.id,
+          title: data.job.title,
+          client: data.job.customerName,
+          address: data.job.serviceAddress,
+          phone: data.job.customerPhone ?? "",
+          status: data.job.status,
+          date: new Date(data.job.scheduledAt).toLocaleString(),
+        });
       } catch (error) {
         console.error("Fetch job detail error:", error);
+        setJob(null);
+        setJobError("Unable to load this job. Please try again.");
+      } finally {
+        setIsLoadingJob(false);
       }
     };
 
@@ -591,8 +603,19 @@ function handleExportDocument() {
     fetchRelatedInvoices();
   }, [jobId]);
 
+  if (isLoadingJob) {
+    return <div className="p-6 text-sm text-gray-600">Loading job...</div>;
+  }
+
   if (!job) {
-    return <div className="p-6">Job not found</div>;
+    return (
+      <div className="p-6">
+        <h2 className="text-lg font-semibold text-brand-blue">Job not found</h2>
+        <p className="mt-2 text-sm text-gray-600">
+          {jobError || "This job could not be found."}
+        </p>
+      </div>
+    );
   }
 
   // Edit modal submission handler.

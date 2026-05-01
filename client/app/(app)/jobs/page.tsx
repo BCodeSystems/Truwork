@@ -13,33 +13,6 @@ type Job = {
   date: string;
 };
 
-const initialJobs: Job[] = [
-  {
-    id: "1",
-    title: "Kitchen Sink Repair",
-    client: "Sarah Johnson",
-    address: "123 Main St, San Diego, CA",
-    status: "Scheduled",
-    date: "Today • 10:00 AM",
-  },
-  {
-    id: "2",
-    title: "Weekly Lawn Maintenance",
-    client: "Mike Rodriguez",
-    address: "456 Oak Ave, Chula Vista, CA",
-    status: "In Progress",
-    date: "Today • 1:30 PM",
-  },
-  {
-    id: "3",
-    title: "Garage Cleanout",
-    client: "Tom Chen",
-    address: "789 Pine Rd, Oceanside, CA",
-    status: "Completed",
-    date: "Yesterday • 4:00 PM",
-  },
-];
-
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
 
@@ -48,6 +21,36 @@ function JobsPageContent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const fetchJobs = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${API_BASE_URL}/api/jobs`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        const formattedJobs = data.jobs.map((job: any) => ({
+          id: job.id,
+          title: job.title,
+          client: job.customerName,
+          address: job.serviceAddress,
+          status: "Scheduled",
+          date: new Date(job.scheduledAt).toLocaleString(),
+        }));
+
+        setJobs(formattedJobs);
+      }
+    } catch (error) {
+      console.error("Fetch jobs error:", error);
+    }
+  };
+
   useEffect(() => {
     if (searchParams.get("new") === "1") {
       setIsModalOpen(true);
@@ -60,40 +63,11 @@ function JobsPageContent() {
   }, [searchParams, router]);
 
   useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const token = localStorage.getItem("token");
-
-        const res = await fetch(`${API_BASE_URL}/api/jobs`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = await res.json();
-
-        if (data.success) {
-          const formattedJobs = data.jobs.map((job: any) => ({
-            id: job.id,
-            title: job.title,
-            client: job.customerName,
-            address: job.serviceAddress,
-            status: "Scheduled",
-            date: new Date(job.scheduledAt).toLocaleString(),
-          }));
-
-          setJobs(formattedJobs);
-        }
-      } catch (error) {
-        console.error("Fetch jobs error:", error);
-      }
-    };
-
     fetchJobs();
   }, []);
 
-  function handleAddJob(job: Job) {
-    setJobs((prevJobs) => [job, ...prevJobs]);
+  function handleAddJob() {
+    fetchJobs();
   }
 
   return (
