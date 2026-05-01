@@ -7,12 +7,16 @@ import { useRouter } from "next/navigation";
 export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
     const API_BASE_URL =
       process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
 
     const handleLogin = async (e: React.FormEvent) => {
       e.preventDefault();
+      setErrorMessage("");
+      setIsLoading(true);
 
       try {
         const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
@@ -26,14 +30,17 @@ export default function LoginPage() {
         const data = await res.json();
 
         if (!data.success) {
-          console.error(data.message);
+          setErrorMessage(data.message || "Invalid email or password.");
           return;
         }
 
         localStorage.setItem("token", data.token);
-        router.push("/jobs");
+        router.push("/dashboard");
       } catch (error) {
         console.error("Login error:", error);
+        setErrorMessage("Something went wrong. Please try again.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -55,6 +62,11 @@ export default function LoginPage() {
             <p className="mt-2 text-sm text-gray-600">
                 Sign in to access your jobs and invoices.
             </p>
+            {errorMessage && (
+              <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {errorMessage}
+              </p>
+            )}
             </div>
 
             <form onSubmit={handleLogin} className="mt-6 space-y-4">
@@ -69,6 +81,7 @@ export default function LoginPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
+                      required
                       className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0b1f3b]"
                     />
                 </div>
@@ -83,15 +96,17 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
+                    required
                     className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0b1f3b]"
                   />
                 </div>
                 
                 <button
-                type="submit"
-                className="w-full rounded-lg bg-brand-red py-2 text-sm font-semibold text-white hover:opacity-90"
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full rounded-lg bg-brand-red py-2 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                    Sign In 
+                  {isLoading ? "Signing in..." : "Sign In"}
                 </button>
 
             </form>

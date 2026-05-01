@@ -156,8 +156,8 @@ export default function NewJobModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-black/40 px-4 py-6">
+      <div className="mx-auto w-full max-w-lg rounded-2xl bg-white p-6 pb-28 shadow-xl">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h3 className="text-xl font-bold text-brand-blue">
@@ -177,7 +177,7 @@ export default function NewJobModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4 pb-8">
           <div>
             <label className="text-sm font-medium text-gray-700">
               Job Name
