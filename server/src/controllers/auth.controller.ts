@@ -126,14 +126,25 @@ export const login = async (req: Request, res: Response) => {
     }
 
     // Generate JWT token for authenticated user
+    const jwtSecret = process.env.JWT_SECRET;
+    const jwtExpiresIn = (process.env.JWT_EXPIRES_IN ||
+      "7d") as jwt.SignOptions["expiresIn"];
+
+    if (!jwtSecret) {
+      return res.status(500).json({
+        success: false,
+        message: "JWT secret is not configured",
+      });
+    }
+
     const token = jwt.sign(
       {
         userId: user.id,
         email: user.email,
       },
-      process.env.JWT_SECRET as string,
+      jwtSecret,
       {
-        expiresIn: process.env.JWT_EXPIRES_IN || "7d",
+        expiresIn: jwtExpiresIn,
       }
     );
 

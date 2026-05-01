@@ -153,7 +153,7 @@ export const getInvoices = async (req: Request, res: Response) => {
     const user = (req as any).user;
 
     // Get the invoice id from the URL params
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     // Find one invoice that matches both the id and logged-in user
     const invoice = await prisma.invoice.findFirst({
@@ -191,7 +191,7 @@ export const getInvoices = async (req: Request, res: Response) => {
   export const updateInvoice = async (req: Request, res: Response) => {
     try {
         const user = (req as any).user;
-        const { id } = req.params;
+        const id = String(req.params.id);
         const {
             jobId,
             documentNumber,
@@ -279,7 +279,7 @@ export const deleteInvoice = async (req: Request, res: Response) => {
     const user = (req as any).user;
 
     // get invoice id from params
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     // make sure the invoice exists and belongs to the user
     const existingInvoice = await prisma.invoice.findFirst({

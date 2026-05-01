@@ -8,7 +8,7 @@ import {
 
 export async function uploadJobPhotoController(req: Request, res: Response) {
   try {
-    const { jobId } = req.params;
+    const jobId = String(req.params.jobId);
     const { category, caption } = req.body;
 
     if (!req.file) {
@@ -31,7 +31,7 @@ export async function uploadJobPhotoController(req: Request, res: Response) {
 
 export async function getJobPhotosController(req: Request, res: Response) {
   try {
-    const { jobId } = req.params;
+    const jobId = String(req.params.jobId);
 
     const photos = await getPhotosByJob(jobId);
 
@@ -44,7 +44,7 @@ export async function getJobPhotosController(req: Request, res: Response) {
 
 export async function deleteJobPhotoController(req: Request, res: Response) {
   try {
-    const { photoId } = req.params;
+    const photoId = String(req.params.photoId);
 
     await deleteJobPhoto(photoId);
 
@@ -61,7 +61,7 @@ export async function updateJobPhotoCategoryController(
   res: Response
 ) {
   try {
-    const { photoId } = req.params;
+    const photoId = String(req.params.photoId);
     const { category } = req.body;
 
     const allowedCategories = [

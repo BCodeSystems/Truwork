@@ -93,7 +93,7 @@ export const getJobById = async (req: Request, res: Response) => {
     const user = (req as any).user;
 
     // Get the job id from the URL params
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     // Find one job that matches both the id and logged-in user
     const job = await prisma.job.findFirst({
@@ -127,7 +127,7 @@ export const getJobById = async (req: Request, res: Response) => {
 export const updateJob = async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
-    const { id } = req.params;
+    const id = String(req.params.id);
     const { 
       title,
       customerName,
@@ -195,7 +195,7 @@ export const updateJob = async (req: Request, res: Response) => {
 export const deleteJob = async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     const existingJob = await prisma.job.findFirst({
       where: {
