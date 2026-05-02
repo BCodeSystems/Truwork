@@ -31,28 +31,6 @@ type Invoice = {
   }[];
 };
 
-// Temporary mock data for V1
-const mockInvoices: Invoice[] = [
-  {
-    id: "1",
-    client: "Sarah Johnson",
-    job: "Kitchen Sink Repair",
-    amount: 150,
-    type: "INVOICE",
-    status: "PAID",
-    date: "Mar 20, 2026",
-  },
-  {
-    id: "2",
-    client: "Mike Rodriguez",
-    job: "Weekly Lawn Maintenance",
-    amount: 80,
-    type: "ESTIMATE",
-    status: "SENT",
-    date: "Mar 22, 2026",
-  },
-];
-
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
 
