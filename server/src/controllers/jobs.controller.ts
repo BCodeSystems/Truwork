@@ -11,23 +11,20 @@ export const createJob = async (req: Request, res: Response) => {
       title,
       customerName,
       serviceAddress,
-      date,
-      time,
+      scheduledAt: scheduledAtRaw,
       clientPhone,
       clientEmail,
       description,
     } = req.body;
 
-    // Required fields only
-    if (!title || !customerName || !serviceAddress || !date || !time) {
+    if (!title || !customerName || !serviceAddress || !scheduledAtRaw) {
       return res.status(400).json({
         success: false,
         message: "Job name, client name, address, date, and time are required",
       });
     }
 
-    // Combine frontend date + time into one DateTime value for Prisma
-    const scheduledAt = new Date(`${date}T${time}`);
+    const scheduledAt = new Date(scheduledAtRaw);
 
     // Save the job to the database
     const job = await prisma.job.create({
@@ -128,12 +125,11 @@ export const updateJob = async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
     const id = String(req.params.id);
-    const { 
+    const {
       title,
       customerName,
       serviceAddress,
-      date,
-      time,
+      scheduledAt: scheduledAtRaw,
       clientPhone,
       clientEmail,
       description,
@@ -159,8 +155,8 @@ export const updateJob = async (req: Request, res: Response) => {
     if (clientEmail !== undefined) updateData.customerEmail = clientEmail || null;
     if (description !== undefined) updateData.description = description || null;
 
-    if (date && time) {
-      updateData.scheduledAt = new Date(`${date}T${time}`);
+    if (scheduledAtRaw) {
+      updateData.scheduledAt = new Date(scheduledAtRaw);
     }
 
     if (Object.keys(updateData).length === 0) {

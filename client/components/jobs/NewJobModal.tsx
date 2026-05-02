@@ -155,8 +155,9 @@ export default function NewJobModal({
           clientPhone: form.clientPhone,
           clientEmail: form.clientEmail,
           description: form.description,
-          date: form.date,
-          time: form.time,
+          scheduledAt: form.date && form.time
+            ? new Date(`${form.date}T${form.time}`).toISOString()
+            : undefined,
         }),
       });
 
