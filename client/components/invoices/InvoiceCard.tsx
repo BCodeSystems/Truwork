@@ -1,5 +1,12 @@
 import React from "react";
 
+type JobPhoto = {
+  id: string;
+  name: string;
+  url: string;
+  category: "Before" | "During" | "After";
+};
+
 type InvoiceCardProps = {
   invoice: {
     client: string;
@@ -22,18 +29,23 @@ type InvoiceCardProps = {
       quantity: number;
       unitPrice: number;
       lineTotal: number;
+      photoIds?: string[];
     }[];
   };
+  photos?: JobPhoto[];
   isSelected: boolean;
   onSelect: () => void;
+  onClose?: () => void;
   onModify?: () => void;
   onResend?: () => void;
 };
 
 export default function InvoiceCard({
   invoice,
+  photos = [],
   isSelected,
   onSelect,
+  onClose,
   onModify,
   onResend,
 }: InvoiceCardProps) {
@@ -271,6 +283,16 @@ export default function InvoiceCard({
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClose ? onClose() : onSelect();
+                  }}
+                  className="rounded-lg border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-500 hover:bg-gray-100"
+                >
+                  Close
+                </button>
                 <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
                   {status}
                 </span>
@@ -309,30 +331,49 @@ export default function InvoiceCard({
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                   Line Items
                 </p>
-                <div className="mt-3 space-y-2">
+                <div className="mt-3 space-y-4">
                   {lineItems.length === 0 ? (
                     <p className="text-xs text-gray-500">
                       No line items saved for this document.
                     </p>
                   ) : (
-                    lineItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-start justify-between gap-3 text-sm"
-                      >
-                        <div>
-                          <p className="font-medium text-gray-700">
-                            {item.description}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Qty {item.quantity} × ${item.unitPrice.toFixed(2)}
-                          </p>
+                    lineItems.map((item) => {
+                      const itemPhotos = (item.photoIds ?? [])
+                        .map((pid) => photos.find((p) => p.id === pid))
+                        .filter(Boolean) as JobPhoto[];
+
+                      return (
+                        <div key={item.id} className="space-y-2">
+                          <div className="flex items-start justify-between gap-3 text-sm">
+                            <div>
+                              <p className="font-medium text-gray-700">
+                                {item.description}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Qty {item.quantity} × ${item.unitPrice.toFixed(2)}
+                              </p>
+                            </div>
+                            <p className="font-semibold text-brand-blue">
+                              ${item.lineTotal.toFixed(2)}
+                            </p>
+                          </div>
+                          {itemPhotos.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {itemPhotos.map((photo) => (
+                                <div key={photo.id} className="flex flex-col items-center gap-1">
+                                  <img
+                                    src={photo.url}
+                                    alt={photo.name}
+                                    className="h-16 w-16 rounded-lg border border-gray-200 object-cover"
+                                  />
+                                  <span className="text-xs text-gray-400">{photo.category}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        <p className="font-semibold text-brand-blue">
-                          ${item.lineTotal.toFixed(2)}
-                        </p>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </div>
@@ -363,6 +404,7 @@ export default function InvoiceCard({
                 </div>
               </div>
             </div>
+
           </div>
         ) : null}
       </div>

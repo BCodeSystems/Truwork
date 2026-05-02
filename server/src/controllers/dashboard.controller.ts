@@ -10,7 +10,7 @@ export const getDashboardSummary = async (req: Request, res: Response) => {
         id: user.userId,
       },
       select: {
-        name: true,
+        firstName: true,
         email: true,
       },
     });
@@ -111,10 +111,7 @@ export const getDashboardSummary = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       user: {
-        name:
-          currentUser?.name ||
-          currentUser?.email?.split("@")[0] ||
-          "there",
+        name: currentUser?.firstName || currentUser?.email?.split("@")[0] || "there",
       },
       summary: {
         todaysJobs,
