@@ -151,6 +151,7 @@ export default function InvoiceCard({
           <div class="document">
             <div style="margin-bottom:16px;">
               <button onclick="window.print()" style="padding:8px 16px;background:#0b1f3b;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Print / Save PDF</button>
+              <button onclick="window.close()" style="padding:8px 16px;background:#e5e7eb;color:#111827;border:none;border-radius:6px;cursor:pointer;font-size:13px;margin-left:8px;">Close</button>
             </div>
             <div class="header">
               <div style="display:flex;align-items:center;gap:12px;">
