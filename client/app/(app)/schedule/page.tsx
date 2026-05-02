@@ -29,14 +29,24 @@ export default function SchedulePage() {
   useEffect(() => {
     const fetchSchedule = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs`, {
-          credentials: "include",
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/jobs`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         const data = await res.json();
 
         if (data.success && data.jobs) {
-          const formatted = data.jobs.map((job: any) => {
+          const today = new Date();
+          const todayJobs = data.jobs.filter((job: any) => {
+            const jobDate = new Date(job.scheduledAt);
+            return (
+              jobDate.getFullYear() === today.getFullYear() &&
+              jobDate.getMonth() === today.getMonth() &&
+              jobDate.getDate() === today.getDate()
+            );
+          });
+          const formatted = todayJobs.map((job: any) => {
             const scheduledDate = new Date(job.scheduledAt);
 
             const timeString = scheduledDate.toLocaleTimeString("en-US", {
