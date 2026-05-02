@@ -176,7 +176,7 @@ export default function AccountSettingsPage() {
                   >
                     {isUploadingLogo ? "Uploading..." : logoUrl ? "Change Logo" : "Upload Logo"}
                   </button>
-                  <p className="mt-1 text-xs text-gray-400">JPEG, PNG, or WEBP · Max 5MB</p>
+                  <p className="mt-1 text-xs text-gray-400">JPEG, PNG, or WEBP · Max 15MB</p>
                 </div>
                 <input
                   ref={fileInputRef}
