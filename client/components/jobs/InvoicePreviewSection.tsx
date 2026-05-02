@@ -66,6 +66,8 @@ export default function InvoicePreviewSection({
   const [logoUrl, setLogoUrl] = useState("");
   const [taxPercent, setTaxPercent] = useState("0");
   const [depositPaid, setDepositPaid] = useState("0");
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const [finalizeError, setFinalizeError] = useState("");
   const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
 
@@ -107,6 +109,8 @@ export default function InvoicePreviewSection({
   const formattedDepositPaid = depositAmount.toFixed(2);
   const formattedBalanceDue = balanceDue.toFixed(2);
   const handleFinalizeDocument = async () => {
+    setFinalizeError("");
+    setIsFinalizing(true);
     try {
       const token = localStorage.getItem("token");
 
@@ -134,14 +138,17 @@ export default function InvoicePreviewSection({
 
       const data = await res.json();
 
-      if (!data.success) {
-        console.error(data.message);
+      if (!res.ok || !data.success) {
+        setFinalizeError(data.message || "Failed to finalize. Please try again.");
         return;
       }
 
       setIsDocumentFinalized(true);
     } catch (error) {
       console.error("Finalize invoice error:", error);
+      setFinalizeError("Network error. Please try again.");
+    } finally {
+      setIsFinalizing(false);
     }
   };
   return (
@@ -492,20 +499,25 @@ export default function InvoicePreviewSection({
         </div>
       </section>
       <section className="pt-6">
+        {finalizeError && (
+          <p className="text-sm text-red-600 text-right">{finalizeError}</p>
+        )}
         <div className="flex flex-col gap-3 border-t border-gray-300 pt-6 sm:flex-row sm:items-center sm:justify-end">
           <button
             type="button"
             onClick={handleFinalizeDocument}
-            disabled={isDocumentFinalized}
+            disabled={isDocumentFinalized || isFinalizing}
             className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
-              isDocumentFinalized
+              isDocumentFinalized || isFinalizing
                 ? "cursor-not-allowed bg-gray-200 text-gray-500"
                 : "bg-brand-red text-white hover:opacity-90"
             }`}
           >
             {isDocumentFinalized
               ? `${documentType} Finalized`
-              : `Finalize ${documentType}`}
+              : isFinalizing
+                ? "Saving..."
+                : `Finalize ${documentType}`}
           </button>
 
           <button
