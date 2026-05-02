@@ -66,8 +66,8 @@ function JobsPageContent() {
     fetchJobs();
   }, []);
 
-  function handleAddJob() {
-    fetchJobs();
+  function handleAddJob(newJob: Job) {
+    setJobs((prev) => [newJob, ...prev]);
   }
 
   return (

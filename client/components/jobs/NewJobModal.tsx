@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
+
 type Job = {
   id: string;
   title: string;
@@ -86,6 +89,8 @@ export default function NewJobModal({
     date: "",
     time: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   useEffect(() => {
     if (initialJob) {
@@ -124,35 +129,75 @@ export default function NewJobModal({
     });
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setSubmitError("");
+    setIsSubmitting(true);
 
-    const newJob: Job = {
-      id: initialJob ? initialJob.id : crypto.randomUUID(),
-      title: form.title,
-      client: form.client,
-      address: form.address,
-      clientPhone: form.clientPhone,
-      clientEmail: form.clientEmail,
-      description: form.description,
-      date: formatJobDateTime(form.date, form.time),
-      status: initialJob ? initialJob.status : "Scheduled",
-    };
+    try {
+      const token = localStorage.getItem("token");
+      const isEditing = !!initialJob;
 
-    onSubmit(newJob);
+      const url = isEditing
+        ? `${API_BASE_URL}/api/jobs/${initialJob.id}`
+        : `${API_BASE_URL}/api/jobs`;
 
-    setForm({
-      title: "",
-      client: "",
-      address: "",
-      clientPhone: "",
-      clientEmail: "",
-      description: "",
-      date: "",
-      time: "",
-    });
+      const res = await fetch(url, {
+        method: isEditing ? "PATCH" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: form.title,
+          customerName: form.client,
+          serviceAddress: form.address,
+          clientPhone: form.clientPhone,
+          clientEmail: form.clientEmail,
+          description: form.description,
+          date: form.date,
+          time: form.time,
+        }),
+      });
 
-    onClose();
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setSubmitError(data.message || "Failed to save job. Please try again.");
+        return;
+      }
+
+      const savedJob: Job = {
+        id: data.job.id,
+        title: data.job.title,
+        client: data.job.customerName,
+        address: data.job.serviceAddress,
+        clientPhone: data.job.customerPhone ?? "",
+        clientEmail: data.job.customerEmail ?? "",
+        description: data.job.description ?? "",
+        date: new Date(data.job.scheduledAt).toLocaleString(),
+        status: data.job.status ?? "Scheduled",
+      };
+
+      onSubmit(savedJob);
+
+      setForm({
+        title: "",
+        client: "",
+        address: "",
+        clientPhone: "",
+        clientEmail: "",
+        description: "",
+        date: "",
+        time: "",
+      });
+
+      onClose();
+    } catch {
+      setSubmitError("Network error. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -292,20 +337,32 @@ export default function NewJobModal({
             </div>
           </div>
 
+          {submitError && (
+            <p className="text-sm text-red-600">{submitError}</p>
+          )}
+
           <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              disabled={isSubmitting}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
             >
               Cancel
             </button>
 
             <button
               type="submit"
-              className="rounded-lg bg-brand-red px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+              disabled={isSubmitting}
+              className="rounded-lg bg-brand-red px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
             >
-              {initialJob ? "Update Job" : "Save Job"}
+              {isSubmitting
+                ? initialJob
+                  ? "Updating..."
+                  : "Saving..."
+                : initialJob
+                  ? "Update Job"
+                  : "Save Job"}
             </button>
           </div>
         </form>
