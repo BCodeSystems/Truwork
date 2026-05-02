@@ -188,11 +188,6 @@ export default function InvoiceCard({
             </div>
           </div>
 
-          <div class="section">
-            <h3>Payment</h3>
-            <p class="muted">Accepted payment methods: ${exportPaymentMethods}</p>
-            <p class="muted">Due: ${exportDueDate}</p>
-          </div>
         </body>
       </html>
     `);
