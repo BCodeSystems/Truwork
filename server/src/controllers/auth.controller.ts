@@ -13,7 +13,16 @@ export const register = async (req: Request, res: Response) => {
       email,
       password,
       confirmPassword,
+      betaCode,
     } = req.body;
+
+    // Check beta access code
+    if (!betaCode || betaCode !== process.env.BETA_CODE) {
+      return res.status(403).json({
+        success: false,
+        message: "Invalid beta access code",
+      });
+    }
 
     // Ensure all required fields were submitted
     if (

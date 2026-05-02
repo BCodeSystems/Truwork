@@ -11,17 +11,23 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [betaCode, setBetaCode] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
 
     if (password !== confirmPassword) {
-      console.error("Passwords do not match");
+      setError("Passwords do not match");
       return;
     }
+
+    setIsSubmitting(true);
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
@@ -36,13 +42,14 @@ export default function SignupPage() {
           firstName,
           lastName,
           businessName,
+          betaCode,
         }),
       });
 
       const data = await res.json();
 
       if (!data.success) {
-        console.error(data.message);
+        setError(data.message || "Something went wrong. Please try again.");
         return;
       }
 
@@ -61,8 +68,10 @@ export default function SignupPage() {
         localStorage.setItem("token", loginData.token);
         router.push("/jobs");
       }
-    } catch (error) {
-      console.error("Signup error:", error);
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -162,11 +171,29 @@ export default function SignupPage() {
             />
           </div>
 
+          <div>
+            <label className="text-sm font-medium text-gray-700">
+              Beta Access Code
+            </label>
+            <input
+              type="text"
+              value={betaCode}
+              onChange={(e) => setBetaCode(e.target.value)}
+              placeholder="Enter your beta access code"
+              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-brand-blue"
+            />
+          </div>
+
+          {error && (
+            <p className="text-sm text-red-600">{error}</p>
+          )}
+
           <button
             type="submit"
-            className="w-full rounded-lg bg-brand-red px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+            disabled={isSubmitting}
+            className="w-full rounded-lg bg-brand-red px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
           >
-            Create Account
+            {isSubmitting ? "Creating Account..." : "Create Account"}
           </button>
         </form>
 

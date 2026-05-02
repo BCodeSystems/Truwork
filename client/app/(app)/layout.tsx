@@ -2,8 +2,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { House, Briefcase, Calendar, File, Menu, CirclePlus } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
+import { useEffect } from "react";
 
 type AppLayoutProps = {
   children: ReactNode;
@@ -19,6 +20,14 @@ const navLinks = [
 
 export default function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.replace("/login");
+    }
+  }, [router]);
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile Top Bar */}
