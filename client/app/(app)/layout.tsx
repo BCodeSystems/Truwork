@@ -4,7 +4,8 @@ import type { ReactNode } from "react";
 import { House, Briefcase, Calendar, File, Menu, CirclePlus } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import FeedbackModal from "@/components/feedback/FeedbackModal";
 
 type AppLayoutProps = {
   children: ReactNode;
@@ -21,6 +22,7 @@ const navLinks = [
 export default function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -101,6 +103,21 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </header>
 
           <main className="px-4 py-6 pb-24 md:p-6">{children}</main>
+
+          {/* Feedback button */}
+          <div className="fixed bottom-24 right-4 z-40 md:bottom-6">
+            <button
+              type="button"
+              onClick={() => setFeedbackOpen(true)}
+              className="rounded-full bg-brand-blue px-4 py-2 text-xs font-semibold text-white shadow-lg hover:opacity-90 transition"
+            >
+              Feedback
+            </button>
+          </div>
+
+          {feedbackOpen && (
+            <FeedbackModal onClose={() => setFeedbackOpen(false)} />
+          )}
         </div>
       </div>
 
