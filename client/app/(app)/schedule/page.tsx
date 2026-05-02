@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import ScheduleList from "@/components/schedule/ScheduleList";
 
 // Schedule item shape for this page.
@@ -22,6 +23,7 @@ function formatTime(time: string) {
 }
 
 export default function SchedulePage() {
+  const router = useRouter();
   const [selectedScheduleItemId, setSelectedScheduleItemId] =
     useState<string | null>(null);
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
@@ -74,6 +76,15 @@ export default function SchedulePage() {
     fetchSchedule();
   }, []);
 
+  async function handleCancel(id: string) {
+    const token = localStorage.getItem("token");
+    await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/jobs/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setScheduleItems((prev) => prev.filter((item) => item.id !== id));
+  }
+
   const sortedScheduleItems = [...scheduleItems].sort((a, b) =>
     a.time.localeCompare(b.time)
   );
@@ -92,6 +103,8 @@ export default function SchedulePage() {
           scheduleItems={sortedScheduleItems}
           selectedScheduleItemId={selectedScheduleItemId}
           setSelectedScheduleItemId={setSelectedScheduleItemId}
+          onReschedule={(id) => router.push(`/jobs/${id}`)}
+          onCancel={handleCancel}
         />
       </div>
     </section>

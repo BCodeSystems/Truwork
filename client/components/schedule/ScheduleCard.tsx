@@ -8,12 +8,16 @@ type ScheduleCardProps = {
   };
   isSelected: boolean;
   onSelect: () => void;
+  onReschedule: () => void;
+  onCancel: () => void;
 };
 
 export default function ScheduleCard({
   scheduleItem,
   isSelected,
   onSelect,
+  onReschedule,
+  onCancel,
 }: ScheduleCardProps) {
   const { job, time, client, address } = scheduleItem;
 
@@ -45,25 +49,20 @@ export default function ScheduleCard({
             <h3 className="text-sm font-semibold text-brand-blue">
               Job Actions
             </h3>
-            <p className="mt-1 text-xs text-gray-600">
-              Scheduling actions will be enabled when saved jobs and backend updates are connected.
-            </p>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <button
                 type="button"
-                disabled
-                onClick={(e) => e.stopPropagation()}
-                className="cursor-not-allowed rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-400"
+                onClick={(e) => { e.stopPropagation(); onReschedule(); }}
+                className="rounded-lg border border-brand-blue px-4 py-2 text-sm font-semibold text-brand-blue transition hover:bg-brand-blue hover:text-white"
               >
                 Reschedule
               </button>
 
               <button
                 type="button"
-                disabled
-                onClick={(e) => e.stopPropagation()}
-                className="cursor-not-allowed rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-400"
+                onClick={(e) => { e.stopPropagation(); onCancel(); }}
+                className="rounded-lg border border-red-500 px-4 py-2 text-sm font-semibold text-red-500 transition hover:bg-red-500 hover:text-white"
               >
                 Cancel Job
               </button>

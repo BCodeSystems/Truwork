@@ -12,12 +12,16 @@ type ScheduleListProps = {
   scheduleItems: ScheduleItem[];
   selectedScheduleItemId: string | null;
   setSelectedScheduleItemId: (id: string) => void;
+  onReschedule: (id: string) => void;
+  onCancel: (id: string) => void;
 };
 
 export default function ScheduleList({
   scheduleItems,
   selectedScheduleItemId,
   setSelectedScheduleItemId,
+  onReschedule,
+  onCancel,
 }: ScheduleListProps) {
   if (scheduleItems.length === 0) {
     return (
@@ -35,6 +39,8 @@ export default function ScheduleList({
           scheduleItem={item}
           isSelected={item.id === selectedScheduleItemId}
           onSelect={() => setSelectedScheduleItemId(item.id)}
+          onReschedule={() => onReschedule(item.id)}
+          onCancel={() => onCancel(item.id)}
         />
       ))}
     </div>
