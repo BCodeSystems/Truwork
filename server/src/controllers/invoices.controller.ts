@@ -82,11 +82,11 @@ export const createInvoice = async (req: Request, res: Response) => {
         lineItems: lineItems
           ? {
               create: lineItems.map((item: any) => ({
-                // each item has description, quantity, unitPrice, and lineTotal
                 description: item.description,
                 quantity: item.quantity,
                 unitPrice: item.unitPrice,
                 lineTotal: item.lineTotal,
+                photoIds: item.photoIds || [],
               })),
             }
           : undefined,
@@ -127,6 +127,7 @@ export const getInvoices = async (req: Request, res: Response) => {
         },
         include: {
           lineItems: true,
+          job: true,
         },
         orderBy: {
           createdAt: "desc",

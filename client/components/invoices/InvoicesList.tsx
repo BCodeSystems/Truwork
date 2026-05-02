@@ -1,10 +1,21 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import InvoiceCard from "@/components/invoices/InvoiceCard";
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
+
+type JobPhoto = {
+  id: string;
+  name: string;
+  url: string;
+  category: "Before" | "During" | "After";
+};
 
 type Invoice = {
   id: string;
+  jobId: string;
   client: string;
   job: string;
   amount: number;
@@ -23,13 +34,14 @@ type Invoice = {
     quantity: number;
     unitPrice: number;
     lineTotal: number;
+    photoIds: string[];
   }[];
 };
 
 type InvoicesListProps = {
   invoices: Invoice[];
   selectedInvoiceId: string | null;
-  setSelectedInvoiceId: (id: string) => void;
+  setSelectedInvoiceId: (id: string | null) => void;
 };
 
 export default function InvoicesList({
@@ -38,6 +50,40 @@ export default function InvoicesList({
   setSelectedInvoiceId,
 }: InvoicesListProps) {
   const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null);
+  const [photosByInvoiceId, setPhotosByInvoiceId] = useState<Record<string, JobPhoto[]>>({});
+
+  useEffect(() => {
+    if (!selectedInvoiceId) return;
+    if (photosByInvoiceId[selectedInvoiceId]) return;
+
+    const invoice = invoices.find((inv) => inv.id === selectedInvoiceId);
+    if (!invoice?.jobId) return;
+
+    const token = localStorage.getItem("token");
+    fetch(`${API_BASE_URL}/api/jobs/${invoice.jobId}/photos`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setPhotosByInvoiceId((prev) => ({
+            ...prev,
+            [selectedInvoiceId]: data.map((p: any) => ({
+              id: p.id,
+              name: p.fileName || "Job photo",
+              url: p.photoUrl,
+              category:
+                p.category === "during"
+                  ? "During"
+                  : p.category === "after"
+                    ? "After"
+                    : "Before",
+            })),
+          }));
+        }
+      })
+      .catch((err) => console.error("Fetch invoice photos error:", err));
+  }, [selectedInvoiceId, invoices]);
   const [editForm, setEditForm] = useState({
     description: "",
     status: "DRAFT" as "DRAFT" | "SENT" | "PAID",
@@ -134,7 +180,13 @@ export default function InvoicesList({
           <InvoiceCard
             invoice={invoice}
             isSelected={invoice.id === selectedInvoiceId}
-            onSelect={() => setSelectedInvoiceId(invoice.id)}
+            photos={photosByInvoiceId[invoice.id] || []}
+            onSelect={() =>
+              setSelectedInvoiceId(
+                invoice.id === selectedInvoiceId ? null : invoice.id
+              )
+            }
+            onClose={() => setSelectedInvoiceId(null)}
             onModify={() => startEditing(invoice)}
             onResend={() => {
               console.log("Export invoice", invoice.id);

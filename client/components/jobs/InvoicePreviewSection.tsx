@@ -87,6 +87,7 @@ export default function InvoicePreviewSection({
         quantity,
         unitPrice,
         lineTotal: quantity * unitPrice,
+        photoIds: item.photoIds,
       };
     });
   }, [lineItems]);

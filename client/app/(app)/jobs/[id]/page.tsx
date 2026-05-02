@@ -327,7 +327,7 @@ function handleExportDocument() {
       <!doctype html>
       <html>
         <head>
-          <title>Your Business Name / Logo</title>
+          <title>${localStorage.getItem("truworkBusinessName") || "Your Business Name"}</title>
           <meta charset="utf-8" />
           <style>
             body {
@@ -411,7 +411,7 @@ function handleExportDocument() {
         <body>
           <div class="document">
             <div class="header">
-              <div class="brand">Your Business Name / Logo</div>
+              <div class="brand">${localStorage.getItem("truworkBusinessName") || "Your Business Name"}</div>
               <div class="doc-type">${documentType}</div>
             </div>
 
@@ -464,7 +464,7 @@ function handleExportDocument() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Your Business Name / Logo`,
+          title: `${localStorage.getItem("truworkBusinessName") || "Your Business Name"}`,
           text: `${documentType} for ${job.client}\n\n${shareText}`,
         });
         return;

@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 // Invoice data shape for this page (matches child components)
 type Invoice = {
   id: string;
+  jobId: string;
   client: string;
   job: string;
   amount: number;
@@ -26,6 +27,7 @@ type Invoice = {
     quantity: number;
     unitPrice: number;
     lineTotal: number;
+    photoIds: string[];
   }[];
 };
 
@@ -74,6 +76,7 @@ export default function InvoicesPage() {
         if (data.success) {
           const formatted = data.invoices.map((inv: any) => ({
             id: inv.id,
+            jobId: inv.jobId,
             client: inv.job?.customerName || "Unknown",
             job: inv.job?.title || "Job",
             amount: Number(inv.total),
@@ -98,6 +101,7 @@ export default function InvoicesPage() {
               quantity: item.quantity,
               unitPrice: Number(item.unitPrice),
               lineTotal: Number(item.lineTotal),
+              photoIds: item.photoIds ?? [],
             })) ?? [],
           }));
 
@@ -126,7 +130,7 @@ export default function InvoicesPage() {
         <InvoicesList
           invoices={invoices}
           selectedInvoiceId={selectedInvoiceId}
-          setSelectedInvoiceId={setSelectedInvoiceId}
+          setSelectedInvoiceId={(id) => setSelectedInvoiceId(id)}
         />
       </div>
     </section>
