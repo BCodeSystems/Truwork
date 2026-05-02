@@ -156,7 +156,7 @@ export default function InvoiceCard({
             </div>
             <div class="header">
               <div style="display:flex;align-items:center;gap:12px;">
-                ${logoUrl ? `<img src="${logoUrl}" style="height:50px;width:50px;border-radius:8px;object-fit:cover;" />` : ""}
+                ${logoUrl ? `<img src="${logoUrl}" style="height:60px;width:auto;border-radius:8px;object-fit:contain;max-width:120px;" />` : ""}
                 <div class="brand">${exportBusinessName}</div>
               </div>
               <div class="doc-type">${type}</div>

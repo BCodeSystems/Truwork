@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import BackButton from "@/components/ui/BackButton";
-import Image from "next/image";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
@@ -155,12 +154,11 @@ export default function AccountSettingsPage() {
               </label>
               <div className="mt-2 flex items-center gap-4">
                 {logoUrl ? (
-                  <Image
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
                     src={logoUrl}
                     alt="Business logo"
-                    width={64}
-                    height={64}
-                    className="h-16 w-16 rounded-lg border border-gray-200 object-cover"
+                    className="h-16 w-16 rounded-lg border border-gray-200 object-contain"
                   />
                 ) : (
                   <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 text-xs text-gray-400">
@@ -176,12 +174,12 @@ export default function AccountSettingsPage() {
                   >
                     {isUploadingLogo ? "Uploading..." : logoUrl ? "Change Logo" : "Upload Logo"}
                   </button>
-                  <p className="mt-1 text-xs text-gray-400">JPEG, PNG, or WEBP · Max 15MB</p>
+                  <p className="mt-1 text-xs text-gray-400">JPEG, PNG, WEBP, SVG, or GIF · Max 15MB</p>
                 </div>
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
+                  accept="image/jpeg,image/png,image/webp,image/svg+xml,image/gif"
                   className="hidden"
                   onChange={handleLogoUpload}
                 />
