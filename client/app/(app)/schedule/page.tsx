@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import ScheduleList from "@/components/schedule/ScheduleList";
+import RescheduleModal from "@/components/schedule/RescheduleModal";
 
 // Schedule item shape for this page.
 type ScheduleItem = {
@@ -23,10 +23,10 @@ function formatTime(time: string) {
 }
 
 export default function SchedulePage() {
-  const router = useRouter();
   const [selectedScheduleItemId, setSelectedScheduleItemId] =
     useState<string | null>(null);
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
+  const [rescheduleJobId, setRescheduleJobId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSchedule = async () => {
@@ -76,6 +76,30 @@ export default function SchedulePage() {
     fetchSchedule();
   }, []);
 
+  function handleRescheduleSaved(jobId: string, newScheduledAt: string) {
+    const newDate = new Date(newScheduledAt);
+    const timeString = newDate.toLocaleTimeString("en-US", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const today = new Date();
+    const stillToday =
+      newDate.getFullYear() === today.getFullYear() &&
+      newDate.getMonth() === today.getMonth() &&
+      newDate.getDate() === today.getDate();
+
+    if (stillToday) {
+      setScheduleItems((prev) =>
+        prev.map((item) =>
+          item.id === jobId ? { ...item, time: formatTime(timeString) } : item
+        )
+      );
+    } else {
+      setScheduleItems((prev) => prev.filter((item) => item.id !== jobId));
+    }
+  }
+
   async function handleCancel(id: string) {
     const token = localStorage.getItem("token");
     await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/jobs/${id}`, {
@@ -90,6 +114,14 @@ export default function SchedulePage() {
   );
 
   return (
+    <>
+    {rescheduleJobId && (
+      <RescheduleModal
+        jobId={rescheduleJobId}
+        onClose={() => setRescheduleJobId(null)}
+        onSaved={handleRescheduleSaved}
+      />
+    )}
     <section className="space-y-4">
       <div>
         <h2 className="text-2xl font-bold text-brand-blue">Schedule</h2>
@@ -103,10 +135,11 @@ export default function SchedulePage() {
           scheduleItems={sortedScheduleItems}
           selectedScheduleItemId={selectedScheduleItemId}
           setSelectedScheduleItemId={setSelectedScheduleItemId}
-          onReschedule={(id) => router.push(`/jobs/${id}`)}
+          onReschedule={(id) => setRescheduleJobId(id)}
           onCancel={handleCancel}
         />
       </div>
     </section>
+    </>
   );
 }
