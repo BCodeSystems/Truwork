@@ -96,131 +96,96 @@ export default function InvoiceCard({
 
   const handleExportInvoice = () => {
     const invoiceWindow = window.open("", "_blank");
-
     if (!invoiceWindow) return;
 
-    const lineItemsHtml = lineItems
-      .map(
-        (item) => `
-          <tr>
-            <td>${item.description}</td>
-            <td>${item.quantity}</td>
-            <td>$${item.unitPrice.toFixed(2)}</td>
-            <td>$${item.lineTotal.toFixed(2)}</td>
-          </tr>
-        `
-      )
+    const lineItemsMarkup = lineItems
+      .map((item) => {
+        const itemPhotos = (item.photoIds ?? [])
+          .map((pid) => photos.find((p) => p.id === pid))
+          .filter(Boolean) as JobPhoto[];
+
+        const photosMarkup = itemPhotos
+          .map(
+            (photo) => `
+              <div style="display:inline-block;margin-right:8px;margin-top:8px;text-align:center;">
+                <img src="${photo.url}" alt="${photo.name}" style="width:88px;height:88px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;display:block;" />
+                <div style="margin-top:4px;font-size:11px;color:#6b7280;">${photo.category}</div>
+              </div>`
+          )
+          .join("");
+
+        return `
+          <div style="padding:16px 0;border-bottom:1px solid #e5e7eb;">
+            <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;font-size:14px;color:#111827;">
+              <div>${item.description || "—"}</div>
+              <div>${item.quantity}</div>
+              <div>$${item.lineTotal.toFixed(2)}</div>
+            </div>
+            ${photosMarkup ? `<div style="margin-top:8px;">${photosMarkup}</div>` : ""}
+          </div>`;
+      })
       .join("");
 
     invoiceWindow.document.write(`
       <html>
         <head>
           <title>${documentNumber || type}</title>
+          <meta charset="utf-8" />
           <style>
-            body {
-              font-family: Arial, sans-serif;
-              padding: 40px;
-              color: #0B1F3B;
-            }
-            h1 {
-              margin-bottom: 4px;
-            }
-            .muted {
-              color: #6b7280;
-              font-size: 14px;
-            }
-            .section {
-              margin-top: 24px;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-top: 12px;
-            }
-            th, td {
-              border-bottom: 1px solid #e5e7eb;
-              padding: 10px;
-              text-align: left;
-              font-size: 14px;
-            }
-            th {
-              background: #f9fafb;
-            }
-            .totals {
-              margin-top: 24px;
-              margin-left: auto;
-              width: 280px;
-            }
-            .total-row {
-              display: flex;
-              justify-content: space-between;
-              padding: 6px 0;
-              font-size: 14px;
-            }
-            .balance {
-              border-top: 2px solid #0B1F3B;
-              margin-top: 8px;
-              padding-top: 10px;
-              font-weight: bold;
-            }
-            @media print {
-              button {
-                display: none;
-              }
-            }
+            body { font-family: Arial, sans-serif; margin: 0; padding: 32px; color: #111827; background: #fff; }
+            .document { max-width: 900px; margin: 0 auto; }
+            .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #c62828; padding-bottom: 24px; margin-bottom: 24px; }
+            .brand { font-size: 30px; font-weight: 600; color: #0b1f3b; }
+            .doc-type { font-size: 36px; font-weight: 700; color: #0b1f3b; text-align: right; }
+            .meta { margin-bottom: 24px; line-height: 1.8; font-size: 14px; }
+            .section-title { font-size: 20px; font-weight: 600; color: #0b1f3b; margin: 24px 0 12px; }
+            .line-items-header { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid #d1d5db; font-size: 12px; font-weight: 600; color: #0b1f3b; text-transform: uppercase; letter-spacing: 0.04em; }
+            .total { margin-top: 20px; padding-top: 16px; border-top: 1px solid #d1d5db; text-align: right; font-size: 22px; font-weight: 700; color: #0b1f3b; }
+            .totals-breakdown { margin-top: 12px; text-align: right; font-size: 14px; color: #6b7280; line-height: 2; }
+            .payment { margin-top: 28px; padding-top: 20px; border-top: 1px solid #d1d5db; }
+            .payment p { margin: 8px 0; font-size: 14px; }
+            @media print { body { padding: 0; } button { display: none; } }
           </style>
         </head>
         <body>
-          <button onclick="window.print()">Print / Save PDF</button>
-
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-            ${logoUrl ? `<img src="${logoUrl}" style="height:50px;width:50px;border-radius:8px;object-fit:cover;" />` : ""}
-            <div>
-              <h2 style="margin:0;">${exportBusinessName}</h2>
-              <p class="muted" style="margin:0;">${documentNumber || "Document"} • ${date}</p>
+          <div class="document">
+            <div style="margin-bottom:16px;">
+              <button onclick="window.print()" style="padding:8px 16px;background:#0b1f3b;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Print / Save PDF</button>
             </div>
-          </div>
+            <div class="header">
+              <div style="display:flex;align-items:center;gap:12px;">
+                ${logoUrl ? `<img src="${logoUrl}" style="height:50px;width:50px;border-radius:8px;object-fit:cover;" />` : ""}
+                <div class="brand">${exportBusinessName}</div>
+              </div>
+              <div class="doc-type">${type}</div>
+            </div>
 
-          <h1>${type}</h1>
+            <div class="meta">
+              <div><strong>Client:</strong> ${client}</div>
+              <div><strong>Job:</strong> ${job}</div>
+              <div><strong>Date:</strong> ${date}</div>
+            </div>
 
-          <div class="section">
-            <h3>Client</h3>
-            <p>${client}</p>
-            <p class="muted">${job}</p>
-          </div>
+            <div class="section-title">Line Items</div>
+            <div class="line-items-header">
+              <div>Description</div>
+              <div>Quantity</div>
+              <div>Amount</div>
+            </div>
+            ${lineItemsMarkup || "<p style='font-size:14px;color:#6b7280;padding:16px 0;'>No line items saved.</p>"}
 
-          <div class="section">
-            <h3>Description</h3>
-            <p>${cleanDescription || `Review this ${type.toLowerCase()} for ${job}.`}</p>
-          </div>
+            <div class="totals-breakdown">
+              <div>Subtotal: $${(subtotal ?? amount).toFixed(2)}</div>
+              <div>Tax: $${(tax ?? 0).toFixed(2)}</div>
+              <div>Deposit Paid: $${(depositPaid ?? 0).toFixed(2)}</div>
+            </div>
+            <div class="total">Total: $${(balanceDue ?? amount).toFixed(2)}</div>
 
-          <div class="section">
-            <h3>Details</h3>
-            <p class="muted">Generated for job: ${job}</p>
-          </div>
-
-          <div class="section">
-            <h3>Line Items</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>Description</th>
-                  <th>Qty</th>
-                  <th>Unit Price</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${lineItemsHtml || "<tr><td colspan='4'>No line items saved.</td></tr>"}
-              </tbody>
-            </table>
-          </div>
-
-          <div class="totals">
-            <div class="total-row"><span>Subtotal</span><span>$${(subtotal ?? amount).toFixed(2)}</span></div>
-            <div class="total-row"><span>Tax</span><span>$${(tax ?? 0).toFixed(2)}</span></div>
-            <div class="total-row"><span>Deposit Paid</span><span>$${(depositPaid ?? 0).toFixed(2)}</span></div>
-            <div class="total-row balance"><span>Balance Due</span><span>$${(balanceDue ?? amount).toFixed(2)}</span></div>
+            <div class="payment">
+              <div class="section-title">Payment Instructions</div>
+              <p><strong>Accepted Payment Methods:</strong> ${exportPaymentMethods}</p>
+              <p><strong>Due Date:</strong> ${exportDueDate}</p>
+            </div>
           </div>
 
           <div class="section">
