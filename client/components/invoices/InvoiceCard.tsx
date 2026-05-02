@@ -69,6 +69,7 @@ export default function InvoiceCard({
 
   const businessName = localStorage.getItem("truworkBusinessName") || "Your Business Name";
   const logoUrl = localStorage.getItem("truworkLogoUrl") || "";
+  const footerNote = localStorage.getItem("truworkFooterNote") || "";
 
   const descriptionText = description || "";
 
@@ -186,6 +187,7 @@ export default function InvoiceCard({
               <div class="section-title">Payment Instructions</div>
               <p><strong>Accepted Payment Methods:</strong> ${exportPaymentMethods}</p>
               <p><strong>Due Date:</strong> ${exportDueDate}</p>
+              ${footerNote ? `<p style="margin-top:16px;font-size:13px;color:#6b7280;">${footerNote}</p>` : ""}
             </div>
           </div>
 

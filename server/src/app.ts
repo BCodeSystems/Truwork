@@ -6,6 +6,7 @@ import invoiceRoutes from "./routes/invoice.routes";
 import dashboardRoutes from "./routes/dashboard.routes";
 import photoRoutes from "./routes/photo.routes";
 import feedbackRoutes from "./routes/feedback.routes";
+import profileRoutes from "./routes/profile.routes";
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use("/api/invoices", invoiceRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api", photoRoutes);
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/profile", profileRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.status(200).json({
