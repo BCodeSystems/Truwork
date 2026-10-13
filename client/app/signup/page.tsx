@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function SignupPage() {
   const [firstName, setFirstName] = useState("");
@@ -15,8 +16,6 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-  const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();

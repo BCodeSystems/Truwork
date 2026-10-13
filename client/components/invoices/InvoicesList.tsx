@@ -2,9 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import InvoiceCard from "@/components/invoices/InvoiceCard";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
+import { apiFetch } from "@/lib/api";
 
 type JobPhoto = {
   id: string;
@@ -59,10 +57,7 @@ export default function InvoicesList({
     const invoice = invoices.find((inv) => inv.id === selectedInvoiceId);
     if (!invoice?.jobId) return;
 
-    const token = localStorage.getItem("token");
-    fetch(`${API_BASE_URL}/api/jobs/${invoice.jobId}/photos`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    apiFetch(`/api/jobs/${invoice.jobId}/photos`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -118,9 +113,6 @@ export default function InvoicesList({
 
   const handleSaveInvoice = async (invoiceId: string) => {
     try {
-      const token = localStorage.getItem("token");
-      const apiBaseUrl =
-        process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
       const subtotal = Number(editForm.subtotal) || 0;
       const taxRate = Number(editForm.taxPercent) || 0;
       const tax = subtotal * (taxRate / 100);
@@ -128,12 +120,8 @@ export default function InvoicesList({
       const total = subtotal + tax;
       const balanceDue = Math.max(total - depositPaid, 0);
 
-      const res = await fetch(`${apiBaseUrl}/api/invoices/${invoiceId}`, {
+      const res = await apiFetch(`/api/invoices/${invoiceId}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           description: editForm.description,
           status: editForm.status.toLowerCase(),

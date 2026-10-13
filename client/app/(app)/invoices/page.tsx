@@ -2,6 +2,7 @@
 
 import InvoicesList from "@/components/invoices/InvoicesList";
 import { useState, useEffect } from "react";
+import { apiFetch } from "@/lib/api";
 
 // Invoice data shape for this page (matches child components)
 type Invoice = {
@@ -31,9 +32,6 @@ type Invoice = {
   }[];
 };
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
-
 export default function InvoicesPage() {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -41,13 +39,7 @@ export default function InvoicesPage() {
   useEffect(() => {
     const fetchInvoices = async () => {
       try {
-        const token = localStorage.getItem("token");
-
-        const res = await fetch(`${API_BASE_URL}/api/invoices`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await apiFetch("/api/invoices");
 
         const data = await res.json();
 

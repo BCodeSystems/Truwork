@@ -8,6 +8,9 @@ import PhotoSelectorModal from "@/components/jobs/PhotoSelectorModal";
 import PhotoPreviewModal from "@/components/jobs/PhotoPreviewModal";
 import PhotosSection from "@/components/jobs/PhotosSection";
 import JobSummarySection from "@/components/jobs/JobSummarySection";
+import { apiFetch } from "@/lib/api";
+import { compressImage } from "@/lib/image";
+import { openInvoiceWindow } from "@/lib/invoiceExport";
 
 // Page-level job shape used for the backend job detail.
 
@@ -46,9 +49,6 @@ function normalizePhotoCategory(
   if (category === "after") return "After";
   return "Before";
 }
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
 
 export default function JobDetailsPage() {
   // Route params and page-level UI state.
@@ -100,24 +100,18 @@ export default function JobDetailsPage() {
 
     try {
       setIsUploadingPhoto(true);
-      const token = localStorage.getItem("token");
       const uploadedPhotos: JobPhoto[] = [];
 
-      for (const file of Array.from(files)) {
+      for (const original of Array.from(files)) {
+        const file = await compressImage(original);
         const formData = new FormData();
         formData.append("photo", file);
         formData.append("category", "before");
 
-        const res = await fetch(
-          `${API_BASE_URL}/api/jobs/${jobId}/photos`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: formData,
-          }
-        );
+        const res = await apiFetch(`/api/jobs/${jobId}/photos`, {
+          method: "POST",
+          body: formData,
+        });
 
         const data = await res.json();
 
@@ -156,21 +150,12 @@ export default function JobDetailsPage() {
     );
 
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await fetch(
-        `${API_BASE_URL}/api/jobs/${jobId}/photos/${photoId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            category: category.toLowerCase(),
-          }),
-        }
-      );
+      const res = await apiFetch(`/api/jobs/${jobId}/photos/${photoId}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          category: category.toLowerCase(),
+        }),
+      });
 
       const data = await res.json();
 
@@ -192,17 +177,9 @@ export default function JobDetailsPage() {
     if (!confirmed) return;
 
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await fetch(
-        `${API_BASE_URL}/api/jobs/${jobId}/photos/${photoId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await apiFetch(`/api/jobs/${jobId}/photos/${photoId}`, {
+        method: "DELETE",
+      });
 
       const data = await res.json();
 
@@ -265,193 +242,42 @@ export default function JobDetailsPage() {
   }
 
   // Export and share helpers for the invoice / estimate.
-  function escapeHtml(value: string) {
-    return value
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
-  }
+  function handleExportDocument() {
+    if (!job) {
+      window.alert("Job details are still loading. Please try again.");
+      return;
+    }
 
-function handleExportDocument() {
-  if (!job) {
-    window.alert("Job details are still loading. Please try again.");
-    return;
-  }
-    const lineItemsMarkup = lineItems
-      .map((item) => {
-        const lineTotal =
-          (Number(item.quantity) || 0) * (Number(item.amount) || 0);
+    const businessName =
+      localStorage.getItem("truworkBusinessName") || "Your Business Name";
 
-        const selectedPhotosMarkup = item.photoIds
-          .map((photoId) => photos.find((photo) => photo.id === photoId))
-          .filter(Boolean)
-          .map(
-            (photo) => `
-              <div style="display: inline-block; margin-right: 8px; margin-top: 8px; text-align: center;">
-                <img
-                  src="${photo!.url}"
-                  alt="${escapeHtml(photo!.name)}"
-                  style="width: 88px; height: 88px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e7eb; display: block;"
-                />
-                <div style="margin-top: 4px; font-size: 11px; color: #6b7280;">${escapeHtml(
-                  photo!.category
-                )}</div>
-              </div>
-            `
-          )
-          .join("");
-
-        return `
-          <div style="padding: 16px 0; border-bottom: 1px solid #e5e7eb;">
-            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; font-size: 14px; color: #111827;">
-              <div>${escapeHtml(item.description || "—")}</div>
-              <div>${escapeHtml(item.quantity || "0")}</div>
-              <div>$${lineTotal.toFixed(2)}</div>
-            </div>
-            ${
-              selectedPhotosMarkup
-                ? `<div style="margin-top: 8px;">${selectedPhotosMarkup}</div>`
-                : ""
-            }
-          </div>
-        `;
-      })
-      .join("");
-
-    const exportWindow = window.open("", "_blank", "width=960,height=1200");
-    if (!exportWindow) return;
-
-    const exportHtml = `
-      <!doctype html>
-      <html>
-        <head>
-          <title>${localStorage.getItem("truworkBusinessName") || "Your Business Name"}</title>
-          <meta charset="utf-8" />
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              margin: 0;
-              padding: 32px;
-              color: #111827;
-              background: #ffffff;
-            }
-            .document {
-              max-width: 900px;
-              margin: 0 auto;
-            }
-            .header {
-              display: flex;
-              justify-content: space-between;
-              align-items: flex-start;
-              border-bottom: 2px solid #c62828;
-              padding-bottom: 24px;
-              margin-bottom: 24px;
-            }
-            .brand {
-              font-size: 30px;
-              font-weight: 600;
-              color: #0b1f3b;
-            }
-            .doc-type {
-              font-size: 36px;
-              font-weight: 700;
-              color: #0b1f3b;
-              text-align: right;
-            }
-            .meta {
-              margin-bottom: 24px;
-              line-height: 1.8;
-              font-size: 14px;
-            }
-            .section-title {
-              font-size: 20px;
-              font-weight: 600;
-              color: #0b1f3b;
-              margin: 24px 0 12px;
-            }
-            .line-items-header {
-              display: grid;
-              grid-template-columns: 2fr 1fr 1fr;
-              gap: 12px;
-              padding: 12px 0;
-              border-bottom: 1px solid #d1d5db;
-              font-size: 12px;
-              font-weight: 600;
-              color: #0b1f3b;
-              text-transform: uppercase;
-              letter-spacing: 0.04em;
-            }
-            .total {
-              margin-top: 20px;
-              padding-top: 16px;
-              border-top: 1px solid #d1d5db;
-              text-align: right;
-              font-size: 22px;
-              font-weight: 700;
-              color: #0b1f3b;
-            }
-            .payment {
-              margin-top: 28px;
-              padding-top: 20px;
-              border-top: 1px solid #d1d5db;
-            }
-            .payment p {
-              margin: 8px 0;
-              font-size: 14px;
-            }
-            @media print {
-              body {
-                padding: 0;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="document">
-            <div class="header">
-              <div class="brand">${localStorage.getItem("truworkBusinessName") || "Your Business Name"}</div>
-              <div class="doc-type">${documentType}</div>
-            </div>
-
-            <div class="meta">
-              <div><strong>Client:</strong> ${escapeHtml(job.client)}</div>
-              <div><strong>Job:</strong> ${escapeHtml(job.title)}</div>
-              <div><strong>Address:</strong> ${escapeHtml(job.address)}</div>
-              <div><strong>Date:</strong> ${escapeHtml(job.date)}</div>
-            </div>
-
-            <div class="section-title">Line Items</div>
-            <div class="line-items-header">
-              <div>Description</div>
-              <div>Quantity</div>
-              <div>Amount</div>
-            </div>
-            ${lineItemsMarkup}
-
-            <div class="total">Total: $${formattedTotal}</div>
-
-            <div class="payment">
-              <div class="section-title">Payment Instructions</div>
-              <p><strong>Accepted Payment Methods:</strong> ${escapeHtml(
-                selectedPaymentMethodsText
-              )}</p>
-              <p><strong>Due Date:</strong> ${escapeHtml(dueDateText)}</p>
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
-
-    exportWindow.document.open();
-    exportWindow.document.write(exportHtml);
-    exportWindow.document.close();
-    exportWindow.focus();
-
-    exportWindow.onload = () => {
-      exportWindow.print();
-    };
+    openInvoiceWindow(
+      {
+        title: businessName,
+        businessName,
+        logoUrl: localStorage.getItem("truworkLogoUrl") || "",
+        documentType,
+        meta: [
+          { label: "Client", value: job.client },
+          { label: "Job", value: job.title },
+          { label: "Address", value: job.address },
+          { label: "Date", value: job.date },
+        ],
+        lineItems: lineItems.map((item) => ({
+          description: item.description,
+          quantity: item.quantity || "0",
+          lineTotal: (Number(item.quantity) || 0) * (Number(item.amount) || 0),
+          photos: item.photoIds
+            .map((photoId) => photos.find((photo) => photo.id === photoId))
+            .filter((photo): photo is JobPhoto => !!photo),
+        })),
+        total,
+        paymentMethods: selectedPaymentMethodsText,
+        dueDate: dueDateText,
+        footerNote: localStorage.getItem("truworkFooterNote") || "",
+      },
+      { autoPrint: true, features: "width=960,height=1200" }
+    );
   }
 
   async function handleShareDocument() {
@@ -494,13 +320,7 @@ function handleExportDocument() {
       try {
         setIsLoadingJob(true);
         setJobError("");
-        const token = localStorage.getItem("token");
-
-        const res = await fetch(`${API_BASE_URL}/api/jobs/${jobId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await apiFetch(`/api/jobs/${jobId}`);
 
         const data = await res.json();
 
@@ -534,16 +354,7 @@ function handleExportDocument() {
   useEffect(() => {
     const fetchJobPhotos = async () => {
       try {
-        const token = localStorage.getItem("token");
-
-        const res = await fetch(
-          `${API_BASE_URL}/api/jobs/${jobId}/photos`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await apiFetch(`/api/jobs/${jobId}/photos`);
 
         const data = await res.json();
 
@@ -570,13 +381,7 @@ function handleExportDocument() {
   useEffect(() => {
     const fetchRelatedInvoices = async () => {
       try {
-        const token = localStorage.getItem("token");
-
-        const res = await fetch(`${API_BASE_URL}/api/invoices`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await apiFetch("/api/invoices");
 
         const data = await res.json();
 
