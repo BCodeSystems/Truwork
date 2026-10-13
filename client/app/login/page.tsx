@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -10,8 +11,12 @@ export default function LoginPage() {
     const [errorMessage, setErrorMessage] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
-    const API_BASE_URL =
-      process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
+
+    useEffect(() => {
+      if (new URLSearchParams(window.location.search).get("reason") === "expired") {
+        setErrorMessage("Your session expired. Please sign in again.");
+      }
+    }, []);
 
     const handleLogin = async (e: React.FormEvent) => {
       e.preventDefault();
@@ -35,7 +40,7 @@ export default function LoginPage() {
         }
 
         localStorage.setItem("token", data.token);
-        router.push("/dashboard");
+        router.replace("/dashboard");
       } catch (error) {
         console.error("Login error:", error);
         setErrorMessage("Something went wrong. Please try again.");

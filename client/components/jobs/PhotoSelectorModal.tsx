@@ -66,6 +66,8 @@ export default function PhotoSelectorModal({
                     }`}
                   >
                     <img
+                      loading="lazy"
+                      decoding="async"
                       src={photo.url}
                       alt={photo.name}
                       className="h-40 w-full object-cover"

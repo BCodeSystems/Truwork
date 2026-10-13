@@ -34,7 +34,7 @@ const androidSteps = [
 
 const benefits = [
   "Faster access - launch directly from your home screen",
-  "Works offline - access job details even without internet",
+  "Works with bad signal - jobs you've opened stay available offline",
   "Full screen experience - no browser bars getting in the way",
   "No app store required - saves phone storage space",
 ];

@@ -70,6 +70,8 @@ export default function PhotosSection({
                 className="block w-full"
               >
                 <img
+                  loading="lazy"
+                  decoding="async"
                   src={photo.url}
                   alt={photo.name}
                   className="h-48 w-full object-cover"

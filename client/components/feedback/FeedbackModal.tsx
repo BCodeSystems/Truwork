@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
+import { apiFetch } from "@/lib/api";
 
 type FeedbackModalProps = {
   onClose: () => void;
@@ -21,13 +19,8 @@ export default function FeedbackModal({ onClose }: FeedbackModalProps) {
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE_URL}/api/feedback`, {
+      const res = await apiFetch("/api/feedback", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({ message }),
       });
 
