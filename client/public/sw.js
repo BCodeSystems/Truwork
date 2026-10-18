@@ -1,6 +1,6 @@
 // TruWork service worker.
 // Bump VERSION to force clients onto fresh caches after a breaking change.
-const VERSION = "v1";
+const VERSION = "v2";
 const STATIC_CACHE = `truwork-static-${VERSION}`;
 const PAGES_CACHE = `truwork-pages-${VERSION}`;
 // Must match API_CACHE_NAME in lib/api.ts, which deletes it on logout.
@@ -10,9 +10,6 @@ const NETWORK_TIMEOUT_MS = 4000;
 
 const PRECACHE_URLS = [
   OFFLINE_URL,
-  "/manifest.json",
-  "/web-app-manifest-192x192.png",
-  "/web-app-manifest-512x512.png",
   "/branding/truwork-monogram.svg",
   "/branding/truwork-wordmark.svg",
 ];
@@ -78,7 +75,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (/\.(?:png|jpe?g|svg|webp|gif|ico|woff2?)$/.test(url.pathname)) {
+  // App icons and the manifest are left to the browser so the home-screen
+  // icon fetch on iOS never depends on the worker.
+  if (
+    url.pathname.startsWith("/branding/") ||
+    url.pathname.startsWith("/images/")
+  ) {
     event.respondWith(staleWhileRevalidate(request, STATIC_CACHE));
   }
 });

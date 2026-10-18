@@ -276,7 +276,7 @@ export default function JobDetailsPage() {
         dueDate: dueDateText,
         footerNote: localStorage.getItem("truworkFooterNote") || "",
       },
-      { autoPrint: true, features: "width=960,height=1200" }
+      { autoPrint: true }
     );
   }
 

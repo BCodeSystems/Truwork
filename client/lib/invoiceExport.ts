@@ -74,16 +74,12 @@ export function buildInvoiceHtml(data: InvoiceExportData) {
             .totals-breakdown { margin-top: 12px; text-align: right; font-size: 14px; color: #6b7280; line-height: 2; }
             .payment { margin-top: 28px; padding-top: 20px; border-top: 1px solid #d1d5db; }
             .payment p { margin: 8px 0; font-size: 14px; }
-            .toolbar button { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
-            @media print { body { padding: 0; } .toolbar { display: none; } }
+            @media (max-width: 600px) { body { padding: 16px; } .brand { font-size: 22px; } .doc-type { font-size: 24px; } }
+            @media print { body { padding: 0; } }
           </style>
         </head>
         <body>
           <div class="document">
-            <div class="toolbar" style="margin-bottom:16px;">
-              <button onclick="window.print()" style="background:#0b1f3b;color:white;">Print / Save PDF</button>
-              <button onclick="window.close()" style="background:#e5e7eb;color:#111827;margin-left:8px;">Close</button>
-            </div>
             <div class="header">
               <div style="display:flex;align-items:center;gap:12px;">
                 ${logoSrc ? `<img src="${logoSrc}" alt="" style="height:60px;width:auto;border-radius:8px;object-fit:contain;max-width:120px;" />` : ""}
@@ -129,21 +125,66 @@ export function buildInvoiceHtml(data: InvoiceExportData) {
       </html>`;
 }
 
+// Shows the document in a full-screen overlay inside the app rather than a
+// popup: home-screen apps on iOS open window.open() in a separate browser
+// sheet, and the written document never appears there.
 export function openInvoiceWindow(
   data: InvoiceExportData,
-  options: { autoPrint?: boolean; features?: string } = {}
+  options: { autoPrint?: boolean } = {}
 ) {
-  const exportWindow = window.open("", "_blank", options.features);
-  if (!exportWindow) return false;
+  document.getElementById("invoice-export-overlay")?.remove();
 
-  exportWindow.document.open();
-  exportWindow.document.write(buildInvoiceHtml(data));
-  exportWindow.document.close();
-  exportWindow.focus();
+  const overlay = document.createElement("div");
+  overlay.id = "invoice-export-overlay";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.style.cssText =
+    "position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;background:#fff;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);";
 
-  if (options.autoPrint) {
-    exportWindow.onload = () => exportWindow.print();
-  }
+  const toolbar = document.createElement("div");
+  toolbar.style.cssText =
+    "display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-bottom:1px solid #e5e7eb;background:#fff;";
 
+  const button = (label: string, primary: boolean) => {
+    const el = document.createElement("button");
+    el.type = "button";
+    el.textContent = label;
+    el.style.cssText = `padding:8px 16px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;${
+      primary ? "background:#0b1f3b;color:#fff;" : "background:#e5e7eb;color:#111827;"
+    }`;
+    return el;
+  };
+  const closeButton = button("Close", false);
+  const printButton = button("Print / Save PDF", true);
+  toolbar.append(closeButton, printButton);
+
+  // Sandboxed without allow-scripts, so nothing inside the document can run.
+  // allow-same-origin lets us call print() on it; allow-modals permits the print dialog.
+  const frame = document.createElement("iframe");
+  frame.title = data.title;
+  frame.setAttribute("sandbox", "allow-same-origin allow-modals");
+  frame.style.cssText = "flex:1;width:100%;border:0;background:#fff;";
+  frame.srcdoc = buildInvoiceHtml(data);
+
+  overlay.append(toolbar, frame);
+
+  const previousOverflow = document.body.style.overflow;
+  const close = () => {
+    overlay.remove();
+    document.body.style.overflow = previousOverflow;
+    document.removeEventListener("keydown", onKeyDown);
+  };
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "Escape") close();
+  };
+  const print = () => frame.contentWindow?.print();
+
+  closeButton.addEventListener("click", close);
+  printButton.addEventListener("click", print);
+  document.addEventListener("keydown", onKeyDown);
+  if (options.autoPrint) frame.addEventListener("load", print, { once: true });
+
+  document.body.style.overflow = "hidden";
+  document.body.appendChild(overlay);
   return true;
 }

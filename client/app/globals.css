@@ -21,3 +21,18 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
+/* iOS Safari zooms in when a field under 16px is focused and never zooms back
+   out. Unlayered, so this wins over Tailwind's text-sm on phones. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Keep long unbroken text (emails, addresses) from widening the page. */
+body {
+  overflow-wrap: break-word;
+}
