@@ -1,4 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import InstallAppCard from "@/components/pwa/InstallAppCard";
+import { logout } from "@/lib/api";
+
 export default function MenuPage() {
   return (
     <section className="space-y-4">
@@ -11,6 +16,8 @@ export default function MenuPage() {
 
       <div className="border-t border-gray-200 pt-4">
         <div className="grid gap-3">
+          <InstallAppCard />
+
           <Link
             href="/menu/account"
             className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:border-brand-blue hover:shadow-md"
@@ -60,6 +67,7 @@ export default function MenuPage() {
         <div className="mt-6 border-t border-gray-200 pt-4">
           <button
             type="button"
+            onClick={() => logout()}
             className="w-full rounded-xl bg-brand-red px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
           >
             Logout

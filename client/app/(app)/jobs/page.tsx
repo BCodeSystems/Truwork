@@ -3,6 +3,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import  JobCard from "@/components/jobs/JobCard"
 import NewJobModal from "@/components/jobs/NewJobModal";
+import { apiFetch } from "@/lib/api";
 
 type Job = {
   id: string;
@@ -13,9 +14,6 @@ type Job = {
   date: string;
 };
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
-
 function JobsPageContent() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,13 +22,7 @@ function JobsPageContent() {
 
   const fetchJobs = async () => {
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await fetch(`${API_BASE_URL}/api/jobs`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await apiFetch("/api/jobs");
 
       const data = await res.json();
 

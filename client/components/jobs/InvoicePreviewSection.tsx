@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { apiFetch } from "@/lib/api";
 type InvoicePreviewSectionProps = {
     job: {
       id: string;
@@ -68,8 +69,6 @@ export default function InvoicePreviewSection({
   const [depositPaid, setDepositPaid] = useState("0");
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [finalizeError, setFinalizeError] = useState("");
-  const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
 
   useEffect(() => {
     const savedBusinessName = localStorage.getItem("truworkBusinessName");
@@ -112,14 +111,8 @@ export default function InvoicePreviewSection({
     setFinalizeError("");
     setIsFinalizing(true);
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await fetch(`${API_BASE_URL}/api/invoices`, {
+      const res = await apiFetch("/api/invoices", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           jobId: job.id,
           documentNumber: `TW-${Date.now()}`,

@@ -1,7 +1,5 @@
 import { useState } from "react";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
+import { apiFetch } from "@/lib/api";
 
 type RescheduleModalProps = {
   jobId: string;
@@ -29,15 +27,10 @@ export default function RescheduleModal({
     setIsSaving(true);
 
     try {
-      const token = localStorage.getItem("token");
       const scheduledAt = new Date(`${date}T${time}`).toISOString();
 
-      const res = await fetch(`${API_BASE_URL}/api/jobs/${jobId}`, {
+      const res = await apiFetch(`/api/jobs/${jobId}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({ scheduledAt }),
       });
 

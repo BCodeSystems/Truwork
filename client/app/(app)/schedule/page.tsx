@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import ScheduleList from "@/components/schedule/ScheduleList";
 import RescheduleModal from "@/components/schedule/RescheduleModal";
+import { apiFetch } from "@/lib/api";
 
 // Schedule item shape for this page.
 type ScheduleItem = {
@@ -31,10 +32,7 @@ export default function SchedulePage() {
   useEffect(() => {
     const fetchSchedule = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/jobs`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await apiFetch("/api/jobs");
 
         const data = await res.json();
 
@@ -101,11 +99,11 @@ export default function SchedulePage() {
   }
 
   async function handleCancel(id: string) {
-    const token = localStorage.getItem("token");
-    await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/jobs/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await apiFetch(`/api/jobs/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      window.alert("Couldn't cancel this job. Please try again.");
+      return;
+    }
     setScheduleItems((prev) => prev.filter((item) => item.id !== id));
   }
 

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api";
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -8,9 +9,6 @@ function getGreeting() {
   if (hour < 18) return "Good afternoon";
   return "Good evening";
 }
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
 
 export default function DashboardPage() {
   const greeting = getGreeting();
@@ -46,13 +44,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const token = localStorage.getItem("token");
-
-        const res = await fetch(`${API_BASE_URL}/api/dashboard`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await apiFetch("/api/dashboard");
 
         const data = await res.json();
 

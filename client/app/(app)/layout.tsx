@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import FeedbackModal from "@/components/feedback/FeedbackModal";
+import { hasValidToken, logout } from "@/lib/api";
 
 type AppLayoutProps = {
   children: ReactNode;
@@ -19,6 +20,10 @@ const navLinks = [
   { href: "/menu", label: "Menu", icon: Menu },
 ];
 
+function isActive(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export default function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -28,12 +33,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
     const token = localStorage.getItem("token");
     if (!token) {
       router.replace("/login");
+    } else if (!hasValidToken()) {
+      logout("expired");
     }
   }, [router]);
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile Top Bar */}
-      <header className="border-b border-gray-200 bg-white md:hidden">
+      <header className="border-b border-gray-200 bg-white pt-[env(safe-area-inset-top)] md:hidden">
         <div className="flex items-center justify-between px-4 py-4">
           <Link href="/dashboard" className="flex items-center">
             <Image
@@ -75,7 +82,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
               <Link
                 key={link.href}
                 href={link.href}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-brand-blue"
+                aria-current={isActive(pathname, link.href) ? "page" : undefined}
+                className={`rounded-lg px-3 py-2 text-sm font-medium transition hover:bg-gray-100 hover:text-brand-blue ${
+                  isActive(pathname, link.href)
+                    ? "bg-gray-100 text-brand-blue"
+                    : "text-gray-700"
+                }`}
               >
                 {link.label}
               </Link>
@@ -102,10 +114,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
             </div>
           </header>
 
-          <main className="px-4 py-6 pb-24 md:p-6">{children}</main>
+          <main className="px-4 py-6 pb-[calc(6rem+env(safe-area-inset-bottom))] md:p-6">{children}</main>
 
           {/* Feedback button */}
-          <div className="fixed bottom-24 right-4 z-40 md:bottom-6">
+          <div className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-4 z-40 md:bottom-6">
             <button
               type="button"
               onClick={() => setFeedbackOpen(true)}
@@ -122,14 +134,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
         <div className="grid grid-cols-5">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
+              aria-current={isActive(pathname, link.href) ? "page" : undefined}
               className={`flex flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] font-medium transition ${
-                pathname === link.href
+                isActive(pathname, link.href)
                   ? "text-[#C62828]"
                   : "text-gray-600 hover:text-brand-blue"
               }`}

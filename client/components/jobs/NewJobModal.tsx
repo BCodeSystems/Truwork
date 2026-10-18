@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
+import { apiFetch } from "@/lib/api";
 
 type Job = {
   id: string;
@@ -135,19 +133,14 @@ export default function NewJobModal({
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem("token");
       const isEditing = !!initialJob;
 
       const url = isEditing
-        ? `${API_BASE_URL}/api/jobs/${initialJob.id}`
-        : `${API_BASE_URL}/api/jobs`;
+        ? `/api/jobs/${initialJob.id}`
+        : "/api/jobs";
 
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method: isEditing ? "PATCH" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           title: form.title,
           customerName: form.client,

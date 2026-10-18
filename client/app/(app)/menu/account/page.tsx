@@ -2,9 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import BackButton from "@/components/ui/BackButton";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
+import { apiFetch } from "@/lib/api";
 
 export default function AccountSettingsPage() {
   const [form, setForm] = useState({
@@ -25,10 +23,7 @@ export default function AccountSettingsPage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE_URL}/api/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await apiFetch("/api/profile");
         const data = await res.json();
         if (data.success && data.profile) {
           const p = data.profile;
@@ -72,13 +67,8 @@ export default function AccountSettingsPage() {
     setIsSaving(true);
 
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE_URL}/api/profile`, {
+      const res = await apiFetch("/api/profile", {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify(form),
       });
 
@@ -107,13 +97,11 @@ export default function AccountSettingsPage() {
     setIsUploadingLogo(true);
 
     try {
-      const token = localStorage.getItem("token");
       const formData = new FormData();
       formData.append("logo", file);
 
-      const res = await fetch(`${API_BASE_URL}/api/profile/logo`, {
+      const res = await apiFetch("/api/profile/logo", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
@@ -174,12 +162,12 @@ export default function AccountSettingsPage() {
                   >
                     {isUploadingLogo ? "Uploading..." : logoUrl ? "Change Logo" : "Upload Logo"}
                   </button>
-                  <p className="mt-1 text-xs text-gray-400">JPEG, PNG, WEBP, SVG, or GIF · Max 15MB</p>
+                  <p className="mt-1 text-xs text-gray-400">JPEG, PNG, WEBP, or GIF · Max 15MB</p>
                 </div>
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,image/svg+xml,image/gif"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
                   className="hidden"
                   onChange={handleLogoUpload}
                 />
